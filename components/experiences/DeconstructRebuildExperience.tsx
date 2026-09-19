@@ -8,6 +8,7 @@ import {
   MOTORCYCLE_COMPONENTS,
   REBUILD_REQUIRED_COMPONENTS,
 } from "@/data/deconstructionConfig";
+import { SpatialToolbox } from "@/components/ui/SpatialToolbox";
 
 type ExperienceMode = "intro" | "explore" | "learn" | "rebuild" | "complete";
 
@@ -236,37 +237,26 @@ export function DeconstructRebuildExperience({
         </div>
       )}
 
-      {/* MODE: REBUILD — Bottom Un-assembled Component Tray */}
+      {/* MODE: REBUILD — Spatial Laboratory Toolbox Drawer */}
       {mode === "rebuild" && (
-        <div className="absolute inset-x-0 bottom-8 z-20 flex flex-col items-center pointer-events-none px-6">
-          <div className="bg-[#09090b] border border-slate-800 rounded-2xl p-4 max-w-2xl w-full shadow-2xl pointer-events-auto space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
-                Puzzle Pieces ({unAssembledComponents.length} remaining)
-              </span>
-              <span className="text-[10px] font-mono text-slate-500">
-                Drag piece in 3D or click Connect
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
-              {unAssembledComponents.map((comp) => {
-                const isSelected = comp.id === selectedComponentId;
-                return (
-                  <button
-                    key={comp.id}
-                    onClick={() => setSelectedComponentId(comp.id)}
-                    className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-mono transition cursor-pointer text-left ${
-                      isSelected
-                        ? "bg-white text-slate-950 font-bold"
-                        : "bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700"
-                    }`}
-                  >
-                    <span>{comp.name}</span>
-                  </button>
-                );
-              })}
-            </div>
+        <div className="absolute inset-x-0 bottom-6 z-20 flex justify-center pointer-events-none px-6">
+          <div className="max-w-4xl w-full">
+            <SpatialToolbox
+              title="MOTORCYCLE REBUILD TOOLBOX"
+              items={REBUILD_REQUIRED_COMPONENTS.map((comp) => ({
+                id: comp.id,
+                name: comp.name,
+                description: comp.description,
+                status: assembledComponentIds.has(comp.id) ? "connected" : "in_toolbox",
+                iconTag: comp.id.substring(0, 4).toUpperCase(),
+              }))}
+              selectedItemId={selectedComponentId}
+              onSelectItem={setSelectedComponentId}
+              onActionItem={(id) => {
+                handleSnapSuccess(id);
+              }}
+              actionLabel="Assemble onto Chassis"
+            />
           </div>
         </div>
       )}

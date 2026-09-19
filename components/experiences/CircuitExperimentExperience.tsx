@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Topic } from "@/types/content";
 import { CircuitCanvas3D } from "@/components/3d/CircuitCanvas3D";
+import { SpatialToolbox } from "@/components/ui/SpatialToolbox";
 
 interface CircuitExperimentExperienceProps {
   area: string;
@@ -203,6 +204,23 @@ export function CircuitExperimentExperience({
               />
             </div>
           </div>
+
+          {/* Electrical Parts Toolbox */}
+          <SpatialToolbox
+            title="ELECTRICAL PARTS TOOLBOX"
+            items={explorableObject.components.map((comp) => ({
+              id: comp.id,
+              name: comp.name,
+              description: comp.description,
+              concepts: comp.concepts,
+              status: isSwitchClosed ? "connected" : "in_toolbox",
+              iconTag: comp.id.toUpperCase(),
+            }))}
+            selectedItemId={selectedComponentId}
+            onSelectItem={setSelectedComponentId}
+            onActionItem={(id) => setSelectedComponentId(id)}
+            actionLabel="Inspect Component"
+          />
 
           {/* Discover Related Knowledge Connections */}
           {topicData.knowledgeConnections && (

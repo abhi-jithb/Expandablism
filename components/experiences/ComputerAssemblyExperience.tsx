@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Topic } from "@/types/content";
 import { ComputerCanvas3D } from "@/components/3d/ComputerCanvas3D";
+import { SpatialToolbox } from "@/components/ui/SpatialToolbox";
 
 interface ComputerAssemblyExperienceProps {
   area: string;
@@ -192,58 +193,46 @@ export function ComputerAssemblyExperience({
         </div>
       )}
 
-      {/* Bottom Component Staging & Boot Deck */}
-      <div className="absolute bottom-8 inset-x-0 z-20 flex flex-col items-center pointer-events-none px-6">
-        <div className="bg-[#09090b]/90 border border-slate-800 rounded-2xl p-6 max-w-2xl w-full shadow-2xl pointer-events-auto space-y-4 backdrop-blur-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
-              Modular Components (Click to Socket)
-            </span>
-            <span className="text-[10px] font-mono text-slate-500">
-              {installedComponentIds.size} of {allComponents.length} Connected
-            </span>
-          </div>
+      {/* Bottom Component Toolbox & Boot Deck */}
+      <div className="absolute bottom-6 inset-x-0 z-20 flex justify-center pointer-events-none px-6">
+        <div className="max-w-4xl w-full space-y-3 pointer-events-auto">
+          <SpatialToolbox
+            title="HARDWARE SOCKET TOOLBOX"
+            items={allComponents.map((comp) => ({
+              id: comp.id,
+              name: comp.name,
+              description: comp.description,
+              concepts: comp.concepts,
+              status: installedComponentIds.has(comp.id) ? "connected" : "in_toolbox",
+              iconTag: comp.id.toUpperCase(),
+            }))}
+            selectedItemId={selectedComponentId}
+            onSelectItem={(id) => {
+              setSelectedComponentId(id);
+              handleToggleComponentInstall(id);
+            }}
+            onActionItem={(id) => {
+              handleToggleComponentInstall(id);
+            }}
+            actionLabel={
+              selectedComponentId && installedComponentIds.has(selectedComponentId)
+                ? "Disconnect Component"
+                : "Socket Component"
+            }
+          />
 
-          {/* Component Quick Socket Strip */}
-          <div className="grid grid-cols-5 gap-2">
-            {allComponents.map((comp) => {
-              const isInstalled = installedComponentIds.has(comp.id);
-              const isSelected = comp.id === selectedComponentId;
-              return (
-                <button
-                  key={comp.id}
-                  onClick={() => {
-                    setSelectedComponentId(comp.id);
-                    handleToggleComponentInstall(comp.id);
-                  }}
-                  className={`p-3 rounded-xl text-xs font-mono text-center transition cursor-pointer border flex flex-col items-center justify-between space-y-1 ${
-                    isInstalled
-                      ? "bg-emerald-950/40 text-emerald-300 border-emerald-800/80"
-                      : isSelected
-                      ? "bg-white text-slate-950 font-bold border-white"
-                      : "bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700"
-                  }`}
-                >
-                  <span className="text-[10px] uppercase font-semibold">{comp.id}</span>
-                  <span className="text-[9px] opacity-75">{isInstalled ? "CONNECTED" : "SOCKET"}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Action Row */}
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+          <div className="flex items-center justify-between bg-[#09090b]/90 border border-slate-800 rounded-xl px-5 py-3 shadow-xl backdrop-blur-xl">
             <div className="flex items-center space-x-2 text-[11px] font-mono text-slate-400">
-              <span>Bus Topology:</span>
+              <span>System Bus:</span>
               <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">
-                PCIe Gen4 / DDR5 / ATX
+                LGA1700 / DDR5-6000 / PCIe Gen4
               </span>
             </div>
 
             <button
               onClick={handleBootSystem}
               disabled={bootState === "booting"}
-              className={`px-8 py-3 rounded-full font-mono text-xs font-bold uppercase tracking-wider transition shadow-lg cursor-pointer active:scale-95 ${
+              className={`px-8 py-2.5 rounded-full font-mono text-xs font-bold uppercase tracking-wider transition shadow-lg cursor-pointer active:scale-95 ${
                 bootState === "running"
                   ? "bg-emerald-400 text-slate-950 hover:bg-emerald-300"
                   : isAllInstalled
