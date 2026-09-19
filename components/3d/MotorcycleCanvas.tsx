@@ -14,6 +14,7 @@ interface CameraFocusControllerProps {
   selectedComponentId: string | null;
   activeLearningComponentId?: string | null;
   isExploded: boolean;
+  isRebuildMode?: boolean;
 }
 
 function CameraFocusController({
@@ -21,6 +22,7 @@ function CameraFocusController({
   selectedComponentId,
   activeLearningComponentId,
   isExploded,
+  isRebuildMode,
 }: CameraFocusControllerProps) {
   useFrame((state, delta) => {
     if (!controlsRef.current) return;
@@ -30,7 +32,9 @@ function CameraFocusController({
 
     const activeId = activeLearningComponentId || selectedComponentId;
 
-    if (isExploded && activeId) {
+    if (isRebuildMode) {
+      targetVector.set(0, 0, 0);
+    } else if (isExploded && activeId) {
       const comp = MOTORCYCLE_COMPONENTS.find((c) => c.id === activeId);
       if (comp) {
         const [ex, ey, ez] = comp.explodedPosition;
@@ -51,6 +55,8 @@ interface MotorcycleCanvasProps {
   maxDistance?: number;
   initialCameraPosition?: [number, number, number];
   isExploded: boolean;
+  isRebuildMode?: boolean;
+  assembledComponentIds?: Set<string>;
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
   activeLearningComponentId?: string | null;
@@ -58,6 +64,8 @@ interface MotorcycleCanvasProps {
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
+  onSnapSuccess?: (id: string) => void;
+  onSnapFail?: (id: string) => void;
   onUserInteraction?: () => void;
 }
 
@@ -76,6 +84,8 @@ export function MotorcycleCanvas({
   maxDistance = 6.5,
   initialCameraPosition = [2.6, 1.2, 2.6],
   isExploded,
+  isRebuildMode = false,
+  assembledComponentIds,
   selectedComponentId,
   hoveredComponentId,
   activeLearningComponentId,
@@ -83,6 +93,8 @@ export function MotorcycleCanvas({
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
+  onSnapSuccess,
+  onSnapFail,
   onUserInteraction,
 }: MotorcycleCanvasProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -155,7 +167,7 @@ export function MotorcycleCanvas({
         {/* Realistic Floor Contact Shadow */}
         <ContactShadows
           position={[0, -0.82, 0]}
-          opacity={isExploded ? 0.45 : 0.65}
+          opacity={isExploded || isRebuildMode ? 0.45 : 0.65}
           scale={14}
           blur={2.5}
           far={4}
@@ -168,6 +180,8 @@ export function MotorcycleCanvas({
             modelPath={modelPath}
             scaleFactor={4.2}
             isExploded={isExploded}
+            isRebuildMode={isRebuildMode}
+            assembledComponentIds={assembledComponentIds}
             selectedComponentId={selectedComponentId}
             hoveredComponentId={hoveredComponentId}
             activeLearningComponentId={activeLearningComponentId}
@@ -175,6 +189,8 @@ export function MotorcycleCanvas({
             onSelectComponent={onSelectComponent}
             onHoverComponent={onHoverComponent}
             onExploreComponent={onExploreComponent}
+            onSnapSuccess={onSnapSuccess}
+            onSnapFail={onSnapFail}
           />
         </Suspense>
 
@@ -183,6 +199,7 @@ export function MotorcycleCanvas({
           selectedComponentId={selectedComponentId}
           activeLearningComponentId={activeLearningComponentId}
           isExploded={isExploded}
+          isRebuildMode={isRebuildMode}
         />
 
         {/* Orbit Controls with auto-pause and resume */}
@@ -191,7 +208,7 @@ export function MotorcycleCanvas({
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          autoRotate={isAutoRotating && !selectedComponentId && !activeLearningComponentId}
+          autoRotate={isAutoRotating && !selectedComponentId && !activeLearningComponentId && !isRebuildMode}
           autoRotateSpeed={0.7}
           rotateSpeed={0.6}
           zoomSpeed={0.75}

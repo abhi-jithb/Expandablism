@@ -12,6 +12,8 @@ interface MotorcycleModelProps {
   modelPath: string;
   scaleFactor?: number;
   isExploded: boolean;
+  isRebuildMode?: boolean;
+  assembledComponentIds?: Set<string>;
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
   activeLearningComponentId?: string | null;
@@ -19,6 +21,8 @@ interface MotorcycleModelProps {
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
+  onSnapSuccess?: (id: string) => void;
+  onSnapFail?: (id: string) => void;
 }
 
 interface NodeData {
@@ -33,6 +37,8 @@ export function MotorcycleModel({
   modelPath,
   scaleFactor = 4.2,
   isExploded,
+  isRebuildMode = false,
+  assembledComponentIds = new Set(),
   selectedComponentId,
   hoveredComponentId,
   activeLearningComponentId,
@@ -40,10 +46,17 @@ export function MotorcycleModel({
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
+  onSnapSuccess,
+  onSnapFail,
 }: MotorcycleModelProps) {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const nodesDataRef = useRef<NodeData[]>([]);
+
+  // 3D Dragging state
+  const [draggingComponentId, setDraggingComponentId] = useState<string | null>(null);
+  const dragCurrentPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const dragPlaneRef = useRef<THREE.Plane>(new THREE.Plane());
 
   const selectedComponent = useMemo(
     () => MOTORCYCLE_COMPONENTS.find((c) => c.id === selectedComponentId),
@@ -118,25 +131,58 @@ export function MotorcycleModel({
   }, [scene, scaleFactor]);
 
   useFrame((state, delta) => {
-    const lerpFactor = Math.min(delta * 6.5, 0.2);
+    const lerpFactor = Math.min(delta * 7.5, 0.25);
 
     nodesDataRef.current.forEach(({ object, initialPos, component, materials }) => {
-      const [ex, ey, ez] = component.explodedPosition;
-      const targetX = isExploded ? initialPos.x + ex : initialPos.x;
-      const targetY = isExploded ? initialPos.y + ey : initialPos.y;
-      const targetZ = isExploded ? initialPos.z + ez : initialPos.z;
+      let targetX = initialPos.x;
+      let targetY = initialPos.y;
+      let targetZ = initialPos.z;
 
+      if (isRebuildMode) {
+        const isAssembled = assembledComponentIds.has(component.id);
+        const isBeingDragged = draggingComponentId === component.id;
+
+        if (isAssembled) {
+          // Assembled into target origin [0,0,0]
+          targetX = initialPos.x;
+          targetY = initialPos.y;
+          targetZ = initialPos.z;
+        } else if (isBeingDragged) {
+          // Currently being dragged in 3D
+          targetX = dragCurrentPosRef.current.x;
+          targetY = dragCurrentPosRef.current.y;
+          targetZ = dragCurrentPosRef.current.z;
+        } else {
+          // Scattered position in puzzle workspace
+          const [sx, sy, sz] = component.puzzleScatterPosition;
+          targetX = initialPos.x + sx;
+          targetY = initialPos.y + sy;
+          targetZ = initialPos.z + sz;
+        }
+      } else if (isExploded) {
+        // Exploded position offset
+        const [ex, ey, ez] = component.explodedPosition;
+        targetX = initialPos.x + ex;
+        targetY = initialPos.y + ey;
+        targetZ = initialPos.z + ez;
+      }
+
+      // Smooth position lerp
       object.position.x = THREE.MathUtils.lerp(object.position.x, targetX, lerpFactor);
       object.position.y = THREE.MathUtils.lerp(object.position.y, targetY, lerpFactor);
       object.position.z = THREE.MathUtils.lerp(object.position.z, targetZ, lerpFactor);
 
+      // Opacity & Highlight lerp
       const isSelected = selectedComponentId === component.id;
       const isHovered = hoveredComponentId === component.id;
       const isDeepLearning = activeLearningComponentId !== null && activeLearningComponentId !== undefined;
       const isLearningActive = activeLearningComponentId === component.id;
 
       let targetOpacity = 1.0;
-      if (isDeepLearning) {
+      if (isRebuildMode) {
+        const isAssembled = assembledComponentIds.has(component.id);
+        targetOpacity = isAssembled ? 1.0 : (isSelected ? 1.0 : 0.85);
+      } else if (isDeepLearning) {
         targetOpacity = isLearningActive ? 1.0 : 0.18;
       } else if (selectedComponentId) {
         targetOpacity = isSelected ? 1.0 : 0.35;
@@ -170,9 +216,72 @@ export function MotorcycleModel({
     }
   });
 
+  // Handle Pointer PointerDown for 3D Dragging & Selection
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    let curr: THREE.Object3D | null = e.object;
+    let foundCompId: string | null = null;
+
+    while (curr) {
+      if (curr.userData?.componentId) {
+        foundCompId = curr.userData.componentId;
+        break;
+      }
+      curr = curr.parent;
+    }
+
+    if (!foundCompId) return;
+
+    onSelectComponent(foundCompId);
+
+    if (isRebuildMode && !assembledComponentIds.has(foundCompId)) {
+      setDraggingComponentId(foundCompId);
+
+      // Construct drag plane facing camera
+      const cameraDir = e.camera.getWorldDirection(new THREE.Vector3()).negate();
+      const nodeObj = nodesDataRef.current.find((n) => n.component.id === foundCompId);
+      if (nodeObj) {
+        dragPlaneRef.current.setFromNormalAndCoplanarPoint(cameraDir, nodeObj.object.position);
+        dragCurrentPosRef.current.copy(nodeObj.object.position);
+      }
+    }
+  };
+
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+    if (draggingComponentId && isRebuildMode) {
+      e.stopPropagation();
+      const intersectionPoint = new THREE.Vector3();
+      if (e.ray.intersectPlane(dragPlaneRef.current, intersectionPoint)) {
+        dragCurrentPosRef.current.copy(intersectionPoint);
+      }
+    }
+  };
+
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
+    if (draggingComponentId && isRebuildMode) {
+      e.stopPropagation();
+      const nodeObj = nodesDataRef.current.find((n) => n.component.id === draggingComponentId);
+
+      if (nodeObj) {
+        // Calculate 3D distance between current drag position and target origin position
+        const targetWorldPos = nodeObj.initialPos;
+        const currentWorldPos = nodeObj.object.position;
+        const distance = currentWorldPos.distanceTo(targetWorldPos);
+
+        // Distance threshold for snapping (0.65 world units)
+        if (distance < 0.65) {
+          if (onSnapSuccess) onSnapSuccess(draggingComponentId);
+        } else {
+          if (onSnapFail) onSnapFail(draggingComponentId);
+        }
+      }
+
+      setDraggingComponentId(null);
+    }
+  };
+
   const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
     if (activeLearningComponentId) return;
-    e.stopPropagation();
     let curr: THREE.Object3D | null = e.object;
     while (curr) {
       if (curr.userData?.componentId) {
@@ -185,21 +294,7 @@ export function MotorcycleModel({
 
   const handlePointerOut = (e: ThreeEvent<PointerEvent>) => {
     if (activeLearningComponentId) return;
-    e.stopPropagation();
     onHoverComponent(null);
-  };
-
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    if (activeLearningComponentId) return;
-    e.stopPropagation();
-    let curr: THREE.Object3D | null = e.object;
-    while (curr) {
-      if (curr.userData?.componentId) {
-        onSelectComponent(curr.userData.componentId);
-        break;
-      }
-      curr = curr.parent;
-    }
   };
 
   const enginePos = engineComponent?.explodedPosition || [0, -0.15, 0.5];
@@ -207,9 +302,11 @@ export function MotorcycleModel({
   return (
     <group
       ref={groupRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
-      onClick={handleClick}
     >
       <primitive object={scene} />
 
@@ -223,7 +320,7 @@ export function MotorcycleModel({
       )}
 
       {/* Floating 3D Label next to Selected Component */}
-      {selectedComponent && isExploded && !activeLearningComponentId && (
+      {selectedComponent && isExploded && !activeLearningComponentId && !isRebuildMode && (
         <Html
           position={selectedWorldPos}
           center
@@ -246,6 +343,35 @@ export function MotorcycleModel({
               className="w-full py-2 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-[11px] tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
             >
               Explore {selectedComponent.name.split(" ")[0]}
+            </button>
+          </div>
+        </Html>
+      )}
+
+      {/* Floating Label in Rebuild Mode for Selected Un-assembled Component */}
+      {selectedComponent && isRebuildMode && !assembledComponentIds.has(selectedComponent.id) && (
+        <Html
+          position={selectedWorldPos}
+          center
+          distanceFactor={7}
+          zIndexRange={[20, 0]}
+        >
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-4 shadow-2xl text-left min-w-[200px] max-w-[240px] pointer-events-auto transition-all duration-300">
+            <span className="text-[9px] font-mono tracking-[0.2em] text-amber-400 uppercase block mb-1">
+              PUZZLE PIECE
+            </span>
+            <h3 className="text-sm font-bold text-white mb-1">
+              {selectedComponent.name}
+            </h3>
+            <p className="text-[11px] text-slate-300 font-light leading-relaxed mb-3">
+              Drag component toward frame to connect, or click snap below.
+            </p>
+
+            <button
+              onClick={() => onSnapSuccess && onSnapSuccess(selectedComponent.id)}
+              className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-[11px] tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+            >
+              Connect Component
             </button>
           </div>
         </Html>
