@@ -1,16 +1,56 @@
 "use client";
 
 import React, { Suspense, useRef, useState, useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, ContactShadows } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import * as THREE from "three";
 import { MotorcycleModel } from "./MotorcycleModel";
+import { MOTORCYCLE_COMPONENTS } from "@/data/deconstructionConfig";
+
+interface CameraFocusControllerProps {
+  controlsRef: React.RefObject<OrbitControlsImpl | null>;
+  selectedComponentId: string | null;
+  isExploded: boolean;
+}
+
+function CameraFocusController({
+  controlsRef,
+  selectedComponentId,
+  isExploded,
+}: CameraFocusControllerProps) {
+  useFrame((state, delta) => {
+    if (!controlsRef.current) return;
+
+    const lerpFactor = Math.min(delta * 4.0, 0.15);
+    const targetVector = new THREE.Vector3(0, 0, 0);
+
+    if (isExploded && selectedComponentId) {
+      const comp = MOTORCYCLE_COMPONENTS.find((c) => c.id === selectedComponentId);
+      if (comp) {
+        const [ex, ey, ez] = comp.explodedPosition;
+        targetVector.set(ex * 0.4, ey * 0.4, ez * 0.4);
+      }
+    }
+
+    controlsRef.current.target.lerp(targetVector, lerpFactor);
+    controlsRef.current.update();
+  });
+
+  return null;
+}
 
 interface MotorcycleCanvasProps {
   modelPath: string;
   minDistance?: number;
   maxDistance?: number;
   initialCameraPosition?: [number, number, number];
+  isExploded: boolean;
+  selectedComponentId: string | null;
+  hoveredComponentId: string | null;
+  onSelectComponent: (id: string | null) => void;
+  onHoverComponent: (id: string | null) => void;
+  onExploreComponent?: (id: string) => void;
   onUserInteraction?: () => void;
 }
 
@@ -28,6 +68,12 @@ export function MotorcycleCanvas({
   minDistance = 1.8,
   maxDistance = 6.5,
   initialCameraPosition = [2.6, 1.2, 2.6],
+  isExploded,
+  selectedComponentId,
+  hoveredComponentId,
+  onSelectComponent,
+  onHoverComponent,
+  onExploreComponent,
   onUserInteraction,
 }: MotorcycleCanvasProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -35,7 +81,6 @@ export function MotorcycleCanvas({
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleStartInteraction = () => {
-    // Immediately pause auto-rotation on user drag
     setIsAutoRotating(false);
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
@@ -46,13 +91,12 @@ export function MotorcycleCanvas({
   };
 
   const handleEndInteraction = () => {
-    // Smoothly resume auto-rotation after 2.5 seconds of idle inactivity
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
     }
     resumeTimerRef.current = setTimeout(() => {
       setIsAutoRotating(true);
-    }, 2500);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -102,17 +146,32 @@ export function MotorcycleCanvas({
         {/* Realistic Floor Contact Shadow */}
         <ContactShadows
           position={[0, -0.82, 0]}
-          opacity={0.65}
-          scale={12}
-          blur={2.2}
+          opacity={isExploded ? 0.45 : 0.65}
+          scale={14}
+          blur={2.5}
           far={4}
           color="#000000"
         />
 
         {/* 3D Motorcycle Geometry */}
         <Suspense fallback={<LoadingFallback />}>
-          <MotorcycleModel modelPath={modelPath} scaleFactor={4.2} />
+          <MotorcycleModel
+            modelPath={modelPath}
+            scaleFactor={4.2}
+            isExploded={isExploded}
+            selectedComponentId={selectedComponentId}
+            hoveredComponentId={hoveredComponentId}
+            onSelectComponent={onSelectComponent}
+            onHoverComponent={onHoverComponent}
+            onExploreComponent={onExploreComponent}
+          />
         </Suspense>
+
+        <CameraFocusController
+          controlsRef={controlsRef}
+          selectedComponentId={selectedComponentId}
+          isExploded={isExploded}
+        />
 
         {/* Orbit Controls with auto-pause and resume */}
         <OrbitControls
@@ -120,7 +179,7 @@ export function MotorcycleCanvas({
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          autoRotate={isAutoRotating}
+          autoRotate={isAutoRotating && !selectedComponentId}
           autoRotateSpeed={0.7}
           rotateSpeed={0.6}
           zoomSpeed={0.75}
