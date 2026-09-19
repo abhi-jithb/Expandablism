@@ -27,8 +27,7 @@ interface MotorcycleModelProps {
 
 interface NodeData {
   object: THREE.Object3D;
-  initialPos: THREE.Vector3;
-  targetPos: THREE.Vector3;
+  originalPos: THREE.Vector3;
   component: DeconstructedComponent;
   materials: THREE.MeshStandardMaterial[];
 }
@@ -115,11 +114,15 @@ export function MotorcycleModel({
           });
 
           child.userData.componentId = comp.id;
-          const initialPos = child.position.clone();
+
+          // Crucial Fix: Store immutable original GLB local position once on userData
+          if (!child.userData.originalPos) {
+            child.userData.originalPos = child.position.clone();
+          }
+
           nodeMap.push({
             object: child,
-            initialPos,
-            targetPos: initialPos.clone(),
+            originalPos: (child.userData.originalPos as THREE.Vector3).clone(),
             component: comp,
             materials,
           });
@@ -133,20 +136,20 @@ export function MotorcycleModel({
   useFrame((state, delta) => {
     const lerpFactor = Math.min(delta * 7.5, 0.25);
 
-    nodesDataRef.current.forEach(({ object, initialPos, component, materials }) => {
-      let targetX = initialPos.x;
-      let targetY = initialPos.y;
-      let targetZ = initialPos.z;
+    nodesDataRef.current.forEach(({ object, originalPos, component, materials }) => {
+      let targetX = originalPos.x;
+      let targetY = originalPos.y;
+      let targetZ = originalPos.z;
 
       if (isRebuildMode) {
         const isAssembled = assembledComponentIds.has(component.id);
         const isBeingDragged = draggingComponentId === component.id;
 
         if (isAssembled) {
-          // Assembled into target origin [0,0,0]
-          targetX = initialPos.x;
-          targetY = initialPos.y;
-          targetZ = initialPos.z;
+          // Assembled into target origin originalPos
+          targetX = originalPos.x;
+          targetY = originalPos.y;
+          targetZ = originalPos.z;
         } else if (isBeingDragged) {
           // Currently being dragged in 3D
           targetX = dragCurrentPosRef.current.x;
@@ -155,16 +158,16 @@ export function MotorcycleModel({
         } else {
           // Scattered position in puzzle workspace
           const [sx, sy, sz] = component.puzzleScatterPosition;
-          targetX = initialPos.x + sx;
-          targetY = initialPos.y + sy;
-          targetZ = initialPos.z + sz;
+          targetX = originalPos.x + sx;
+          targetY = originalPos.y + sy;
+          targetZ = originalPos.z + sz;
         }
       } else if (isExploded) {
         // Exploded position offset
         const [ex, ey, ez] = component.explodedPosition;
-        targetX = initialPos.x + ex;
-        targetY = initialPos.y + ey;
-        targetZ = initialPos.z + ez;
+        targetX = originalPos.x + ex;
+        targetY = originalPos.y + ey;
+        targetZ = originalPos.z + ez;
       }
 
       // Smooth position lerp
@@ -263,12 +266,11 @@ export function MotorcycleModel({
       const nodeObj = nodesDataRef.current.find((n) => n.component.id === draggingComponentId);
 
       if (nodeObj) {
-        // Calculate 3D distance between current drag position and target origin position
-        const targetWorldPos = nodeObj.initialPos;
+        // Calculate distance between current position and original position
+        const targetWorldPos = nodeObj.originalPos;
         const currentWorldPos = nodeObj.object.position;
         const distance = currentWorldPos.distanceTo(targetWorldPos);
 
-        // Distance threshold for snapping (0.65 world units)
         if (distance < 0.65) {
           if (onSnapSuccess) onSnapSuccess(draggingComponentId);
         } else {
