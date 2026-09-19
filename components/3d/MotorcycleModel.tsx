@@ -27,7 +27,9 @@ interface MotorcycleModelProps {
 
 interface NodeData {
   object: THREE.Object3D;
-  originalPos: THREE.Vector3;
+  canonicalPos: THREE.Vector3;
+  canonicalRot: THREE.Euler;
+  canonicalScale: THREE.Vector3;
   component: DeconstructedComponent;
   materials: THREE.MeshStandardMaterial[];
 }
@@ -52,6 +54,18 @@ export function MotorcycleModel({
   const groupRef = useRef<THREE.Group>(null);
   const nodesDataRef = useRef<NodeData[]>([]);
 
+  // 1. Deep clone scene graph on load to preserve pristine, unmutated GLTF transforms
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((child) => {
+      // Store canonical original transforms directly on userData once
+      child.userData.canonicalPosition = child.position.clone();
+      child.userData.canonicalRotation = child.rotation.clone();
+      child.userData.canonicalScale = child.scale.clone();
+    });
+    return clone;
+  }, [scene]);
+
   // 3D Dragging state
   const [draggingComponentId, setDraggingComponentId] = useState<string | null>(null);
   const dragCurrentPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -70,15 +84,15 @@ export function MotorcycleModel({
   const [selectedWorldPos, setSelectedWorldPos] = useState<[number, number, number]>([0, 0, 0]);
 
   useLayoutEffect(() => {
-    if (!scene) return;
+    if (!clonedScene) return;
 
-    const box = new THREE.Box3().setFromObject(scene);
+    const box = new THREE.Box3().setFromObject(clonedScene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 
-    scene.position.x = -center.x;
-    scene.position.y = -center.y;
-    scene.position.z = -center.z;
+    clonedScene.position.x = -center.x;
+    clonedScene.position.y = -center.y;
+    clonedScene.position.z = -center.z;
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const targetScale = scaleFactor / (maxDim || 1);
@@ -90,7 +104,7 @@ export function MotorcycleModel({
 
     const nodeMap: NodeData[] = [];
 
-    scene.traverse((child) => {
+    clonedScene.traverse((child) => {
       if (child.name) {
         const comp = MOTORCYCLE_COMPONENTS.find((c) => c.nodeNames.includes(child.name));
         if (comp) {
@@ -115,14 +129,11 @@ export function MotorcycleModel({
 
           child.userData.componentId = comp.id;
 
-          // Crucial Fix: Store immutable original GLB local position once on userData
-          if (!child.userData.originalPos) {
-            child.userData.originalPos = child.position.clone();
-          }
-
           nodeMap.push({
             object: child,
-            originalPos: (child.userData.originalPos as THREE.Vector3).clone(),
+            canonicalPos: (child.userData.canonicalPosition as THREE.Vector3).clone(),
+            canonicalRot: (child.userData.canonicalRotation as THREE.Euler).clone(),
+            canonicalScale: (child.userData.canonicalScale as THREE.Vector3).clone(),
             component: comp,
             materials,
           });
@@ -131,25 +142,25 @@ export function MotorcycleModel({
     });
 
     nodesDataRef.current = nodeMap;
-  }, [scene, scaleFactor]);
+  }, [clonedScene, scaleFactor]);
 
   useFrame((state, delta) => {
     const lerpFactor = Math.min(delta * 7.5, 0.25);
 
-    nodesDataRef.current.forEach(({ object, originalPos, component, materials }) => {
-      let targetX = originalPos.x;
-      let targetY = originalPos.y;
-      let targetZ = originalPos.z;
+    nodesDataRef.current.forEach(({ object, canonicalPos, canonicalRot, canonicalScale, component, materials }) => {
+      let targetX = canonicalPos.x;
+      let targetY = canonicalPos.y;
+      let targetZ = canonicalPos.z;
 
       if (isRebuildMode) {
         const isAssembled = assembledComponentIds.has(component.id);
         const isBeingDragged = draggingComponentId === component.id;
 
         if (isAssembled) {
-          // Assembled into target origin originalPos
-          targetX = originalPos.x;
-          targetY = originalPos.y;
-          targetZ = originalPos.z;
+          // Assembled into canonical target origin
+          targetX = canonicalPos.x;
+          targetY = canonicalPos.y;
+          targetZ = canonicalPos.z;
         } else if (isBeingDragged) {
           // Currently being dragged in 3D
           targetX = dragCurrentPosRef.current.x;
@@ -158,22 +169,31 @@ export function MotorcycleModel({
         } else {
           // Scattered position in puzzle workspace
           const [sx, sy, sz] = component.puzzleScatterPosition;
-          targetX = originalPos.x + sx;
-          targetY = originalPos.y + sy;
-          targetZ = originalPos.z + sz;
+          targetX = canonicalPos.x + sx;
+          targetY = canonicalPos.y + sy;
+          targetZ = canonicalPos.z + sz;
         }
       } else if (isExploded) {
-        // Exploded position offset
+        // Exploded position offset derived from canonicalPos
         const [ex, ey, ez] = component.explodedPosition;
-        targetX = originalPos.x + ex;
-        targetY = originalPos.y + ey;
-        targetZ = originalPos.z + ez;
+        targetX = canonicalPos.x + ex;
+        targetY = canonicalPos.y + ey;
+        targetZ = canonicalPos.z + ez;
       }
 
-      // Smooth position lerp
+      // Smooth position lerp back to canonical assembled or exploded target
       object.position.x = THREE.MathUtils.lerp(object.position.x, targetX, lerpFactor);
       object.position.y = THREE.MathUtils.lerp(object.position.y, targetY, lerpFactor);
       object.position.z = THREE.MathUtils.lerp(object.position.z, targetZ, lerpFactor);
+
+      // Smooth rotation & scale lerp back to canonical assembled state
+      object.rotation.x = THREE.MathUtils.lerp(object.rotation.x, canonicalRot.x, lerpFactor);
+      object.rotation.y = THREE.MathUtils.lerp(object.rotation.y, canonicalRot.y, lerpFactor);
+      object.rotation.z = THREE.MathUtils.lerp(object.rotation.z, canonicalRot.z, lerpFactor);
+
+      object.scale.x = THREE.MathUtils.lerp(object.scale.x, canonicalScale.x, lerpFactor);
+      object.scale.y = THREE.MathUtils.lerp(object.scale.y, canonicalScale.y, lerpFactor);
+      object.scale.z = THREE.MathUtils.lerp(object.scale.z, canonicalScale.z, lerpFactor);
 
       // Opacity & Highlight lerp
       const isSelected = selectedComponentId === component.id;
@@ -187,7 +207,7 @@ export function MotorcycleModel({
         targetOpacity = isAssembled ? 1.0 : (isSelected ? 1.0 : 0.85);
       } else if (isDeepLearning) {
         targetOpacity = isLearningActive ? 1.0 : 0.18;
-      } else if (selectedComponentId) {
+      } else if (selectedComponentId && isExploded) {
         targetOpacity = isSelected ? 1.0 : 0.35;
       }
 
@@ -195,7 +215,7 @@ export function MotorcycleModel({
         mat.transparent = targetOpacity < 0.99;
         mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, lerpFactor);
 
-        if (isHovered && !selectedComponentId && !isDeepLearning) {
+        if (isHovered && !selectedComponentId && !isDeepLearning && (isExploded || isRebuildMode)) {
           mat.emissive.setHex(0x38bdf8);
           mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0.25, lerpFactor);
         } else if (isSelected || isLearningActive) {
@@ -219,8 +239,9 @@ export function MotorcycleModel({
     }
   });
 
-  // Handle Pointer PointerDown for 3D Dragging & Selection
+  // Handle Pointer Down for 3D Dragging & Selection
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    if (!isExploded && !isRebuildMode) return;
     e.stopPropagation();
     let curr: THREE.Object3D | null = e.object;
     let foundCompId: string | null = null;
@@ -240,7 +261,6 @@ export function MotorcycleModel({
     if (isRebuildMode && !assembledComponentIds.has(foundCompId)) {
       setDraggingComponentId(foundCompId);
 
-      // Construct drag plane facing camera
       const cameraDir = e.camera.getWorldDirection(new THREE.Vector3()).negate();
       const nodeObj = nodesDataRef.current.find((n) => n.component.id === foundCompId);
       if (nodeObj) {
@@ -266,8 +286,7 @@ export function MotorcycleModel({
       const nodeObj = nodesDataRef.current.find((n) => n.component.id === draggingComponentId);
 
       if (nodeObj) {
-        // Calculate distance between current position and original position
-        const targetWorldPos = nodeObj.originalPos;
+        const targetWorldPos = nodeObj.canonicalPos;
         const currentWorldPos = nodeObj.object.position;
         const distance = currentWorldPos.distanceTo(targetWorldPos);
 
@@ -283,6 +302,7 @@ export function MotorcycleModel({
   };
 
   const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
+    if (!isExploded && !isRebuildMode) return;
     if (activeLearningComponentId) return;
     let curr: THREE.Object3D | null = e.object;
     while (curr) {
@@ -295,6 +315,7 @@ export function MotorcycleModel({
   };
 
   const handlePointerOut = (e: ThreeEvent<PointerEvent>) => {
+    if (!isExploded && !isRebuildMode) return;
     if (activeLearningComponentId) return;
     onHoverComponent(null);
   };
@@ -310,7 +331,7 @@ export function MotorcycleModel({
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      <primitive object={scene} />
+      <primitive object={clonedScene} />
 
       {/* 3D Educational Visualization overlay during Engine Learning Mode */}
       {activeLearningComponentId === "engine" && (
