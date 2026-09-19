@@ -60,10 +60,14 @@ interface MotorcycleCanvasProps {
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
   activeLearningComponentId?: string | null;
-  currentStroke?: FourStrokeStep;
+  learningStep?: number | null;
+  currentStrokeIndex?: number;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
+  onNextLearningStep?: () => void;
+  onSelectStrokeIndex?: (idx: number) => void;
+  onCompleteLearning?: () => void;
   onSnapSuccess?: (id: string) => void;
   onSnapFail?: (id: string) => void;
   onUserInteraction?: () => void;
@@ -89,10 +93,14 @@ export function MotorcycleCanvas({
   selectedComponentId,
   hoveredComponentId,
   activeLearningComponentId,
-  currentStroke,
+  learningStep,
+  currentStrokeIndex,
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
+  onNextLearningStep,
+  onSelectStrokeIndex,
+  onCompleteLearning,
   onSnapSuccess,
   onSnapFail,
   onUserInteraction,
@@ -130,14 +138,6 @@ export function MotorcycleCanvas({
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden select-none touch-none bg-[#070709]">
-      {/* Subtle radial studio floor spotlight effect */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-40" 
-        style={{
-          background: "radial-gradient(circle at 50% 60%, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0) 65%)"
-        }} 
-      />
-
       <Canvas
         camera={{ position: initialCameraPosition, fov: 42 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
@@ -146,7 +146,7 @@ export function MotorcycleCanvas({
       >
         <color attach="background" args={["#070709"]} />
 
-        {/* Studio Lighting Setup for Premium Presentation */}
+        {/* Studio Lighting Setup for Minimal Museum Presentation */}
         <ambientLight intensity={0.7} />
         
         {/* Main Key Light */}
@@ -174,7 +174,7 @@ export function MotorcycleCanvas({
           color="#000000"
         />
 
-        {/* 3D Motorcycle Geometry */}
+        {/* 3D Motorcycle Geometry & Spatial Annotations */}
         <Suspense fallback={<LoadingFallback />}>
           <MotorcycleModel
             modelPath={modelPath}
@@ -185,10 +185,14 @@ export function MotorcycleCanvas({
             selectedComponentId={selectedComponentId}
             hoveredComponentId={hoveredComponentId}
             activeLearningComponentId={activeLearningComponentId}
-            currentStroke={currentStroke}
+            learningStep={learningStep}
+            currentStrokeIndex={currentStrokeIndex}
             onSelectComponent={onSelectComponent}
             onHoverComponent={onHoverComponent}
             onExploreComponent={onExploreComponent}
+            onNextLearningStep={onNextLearningStep}
+            onSelectStrokeIndex={onSelectStrokeIndex}
+            onCompleteLearning={onCompleteLearning}
             onSnapSuccess={onSnapSuccess}
             onSnapFail={onSnapFail}
           />

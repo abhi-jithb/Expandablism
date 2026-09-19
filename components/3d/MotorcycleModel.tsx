@@ -6,7 +6,7 @@ import { useFrame, ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { MOTORCYCLE_COMPONENTS, DeconstructedComponent } from "@/data/deconstructionConfig";
 import { EngineVisualization3D } from "./EngineVisualization3D";
-import { FourStrokeStep } from "@/data/learningContent";
+import { LEARNING_CONTENT_MAP } from "@/data/learningContent";
 
 interface MotorcycleModelProps {
   modelPath: string;
@@ -17,10 +17,14 @@ interface MotorcycleModelProps {
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
   activeLearningComponentId?: string | null;
-  currentStroke?: FourStrokeStep;
+  learningStep?: number | null;
+  currentStrokeIndex?: number;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
+  onNextLearningStep?: () => void;
+  onSelectStrokeIndex?: (idx: number) => void;
+  onCompleteLearning?: () => void;
   onSnapSuccess?: (id: string) => void;
   onSnapFail?: (id: string) => void;
 }
@@ -43,10 +47,14 @@ export function MotorcycleModel({
   selectedComponentId,
   hoveredComponentId,
   activeLearningComponentId,
-  currentStroke,
+  learningStep,
+  currentStrokeIndex = 0,
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
+  onNextLearningStep,
+  onSelectStrokeIndex,
+  onCompleteLearning,
   onSnapSuccess,
   onSnapFail,
 }: MotorcycleModelProps) {
@@ -54,11 +62,10 @@ export function MotorcycleModel({
   const groupRef = useRef<THREE.Group>(null);
   const nodesDataRef = useRef<NodeData[]>([]);
 
-  // 1. Deep clone scene graph on load to preserve pristine, unmutated GLTF transforms
+  // Deep clone scene graph on load to preserve pristine, unmutated canonical GLTF transforms
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
     clone.traverse((child) => {
-      // Store canonical original transforms directly on userData once
       child.userData.canonicalPosition = child.position.clone();
       child.userData.canonicalRotation = child.rotation.clone();
       child.userData.canonicalScale = child.scale.clone();
@@ -80,6 +87,9 @@ export function MotorcycleModel({
     () => MOTORCYCLE_COMPONENTS.find((c) => c.id === "engine"),
     []
   );
+
+  const engineLearningData = LEARNING_CONTENT_MAP["engine"];
+  const currentStroke = engineLearningData?.fourStrokes[currentStrokeIndex];
 
   const [selectedWorldPos, setSelectedWorldPos] = useState<[number, number, number]>([0, 0, 0]);
 
@@ -157,36 +167,32 @@ export function MotorcycleModel({
         const isBeingDragged = draggingComponentId === component.id;
 
         if (isAssembled) {
-          // Assembled into canonical target origin
           targetX = canonicalPos.x;
           targetY = canonicalPos.y;
           targetZ = canonicalPos.z;
         } else if (isBeingDragged) {
-          // Currently being dragged in 3D
           targetX = dragCurrentPosRef.current.x;
           targetY = dragCurrentPosRef.current.y;
           targetZ = dragCurrentPosRef.current.z;
         } else {
-          // Scattered position in puzzle workspace
           const [sx, sy, sz] = component.puzzleScatterPosition;
           targetX = canonicalPos.x + sx;
           targetY = canonicalPos.y + sy;
           targetZ = canonicalPos.z + sz;
         }
       } else if (isExploded) {
-        // Exploded position offset derived from canonicalPos
         const [ex, ey, ez] = component.explodedPosition;
         targetX = canonicalPos.x + ex;
         targetY = canonicalPos.y + ey;
         targetZ = canonicalPos.z + ez;
       }
 
-      // Smooth position lerp back to canonical assembled or exploded target
+      // Position lerp
       object.position.x = THREE.MathUtils.lerp(object.position.x, targetX, lerpFactor);
       object.position.y = THREE.MathUtils.lerp(object.position.y, targetY, lerpFactor);
       object.position.z = THREE.MathUtils.lerp(object.position.z, targetZ, lerpFactor);
 
-      // Smooth rotation & scale lerp back to canonical assembled state
+      // Rotation & Scale lerp
       object.rotation.x = THREE.MathUtils.lerp(object.rotation.x, canonicalRot.x, lerpFactor);
       object.rotation.y = THREE.MathUtils.lerp(object.rotation.y, canonicalRot.y, lerpFactor);
       object.rotation.z = THREE.MathUtils.lerp(object.rotation.z, canonicalRot.z, lerpFactor);
@@ -195,18 +201,17 @@ export function MotorcycleModel({
       object.scale.y = THREE.MathUtils.lerp(object.scale.y, canonicalScale.y, lerpFactor);
       object.scale.z = THREE.MathUtils.lerp(object.scale.z, canonicalScale.z, lerpFactor);
 
-      // Opacity & Highlight lerp
-      const isSelected = selectedComponentId === component.id;
-      const isHovered = hoveredComponentId === component.id;
+      // Opacity lerp (Subtle dimming without flashy neon emissives)
+      const activeId = activeLearningComponentId || selectedComponentId;
+      const isSelected = activeId === component.id;
       const isDeepLearning = activeLearningComponentId !== null && activeLearningComponentId !== undefined;
-      const isLearningActive = activeLearningComponentId === component.id;
 
       let targetOpacity = 1.0;
       if (isRebuildMode) {
         const isAssembled = assembledComponentIds.has(component.id);
         targetOpacity = isAssembled ? 1.0 : (isSelected ? 1.0 : 0.85);
       } else if (isDeepLearning) {
-        targetOpacity = isLearningActive ? 1.0 : 0.18;
+        targetOpacity = isSelected ? 1.0 : 0.22;
       } else if (selectedComponentId && isExploded) {
         targetOpacity = isSelected ? 1.0 : 0.35;
       }
@@ -214,32 +219,24 @@ export function MotorcycleModel({
       materials.forEach((mat) => {
         mat.transparent = targetOpacity < 0.99;
         mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, lerpFactor);
-
-        if (isHovered && !selectedComponentId && !isDeepLearning && (isExploded || isRebuildMode)) {
-          mat.emissive.setHex(0x38bdf8);
-          mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0.25, lerpFactor);
-        } else if (isSelected || isLearningActive) {
-          mat.emissive.setHex(0x60a5fa);
-          mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0.35, lerpFactor);
-        } else {
-          mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0, lerpFactor);
-        }
+        mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0, lerpFactor);
       });
     });
 
-    if (selectedComponentId) {
+    // Continuously update 3D world position of selected component for HTML label anchoring
+    const activeTargetId = activeLearningComponentId || selectedComponentId;
+    if (activeTargetId) {
       const selectedNodes = nodesDataRef.current.filter(
-        (n) => n.component.id === selectedComponentId
+        (n) => n.component.id === activeTargetId
       );
       if (selectedNodes.length > 0) {
         const centerWorld = new THREE.Vector3();
         selectedNodes[0].object.getWorldPosition(centerWorld);
-        setSelectedWorldPos([centerWorld.x, centerWorld.y + 0.3, centerWorld.z]);
+        setSelectedWorldPos([centerWorld.x, centerWorld.y + 0.35, centerWorld.z]);
       }
     }
   });
 
-  // Handle Pointer Down for 3D Dragging & Selection
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!isExploded && !isRebuildMode) return;
     e.stopPropagation();
@@ -342,31 +339,141 @@ export function MotorcycleModel({
         />
       )}
 
-      {/* Floating 3D Label next to Selected Component */}
+      {/* SPATIAL 3D KNOWLEDGE ANNOTATION (Follows component in 3D space during Exploded Selection) */}
       {selectedComponent && isExploded && !activeLearningComponentId && !isRebuildMode && (
         <Html
           position={selectedWorldPos}
           center
-          distanceFactor={7}
+          distanceFactor={6.8}
           zIndexRange={[20, 0]}
         >
-          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-4 shadow-2xl text-left min-w-[220px] max-w-[260px] pointer-events-auto transition-all duration-300">
-            <span className="text-[9px] font-mono tracking-[0.2em] text-blue-400 uppercase block mb-1">
-              COMPONENT SELECTED
+          <div className="bg-[#09090b]/95 border border-slate-800 rounded-2xl p-5 shadow-2xl text-left min-w-[240px] max-w-[280px] pointer-events-auto transition-all duration-300 select-none">
+            <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase block mb-1">
+              {selectedComponent.id.toUpperCase()}
             </span>
-            <h3 className="text-sm font-bold text-white mb-1">
+            <h3 className="text-base font-medium text-white mb-1.5">
               {selectedComponent.name}
             </h3>
-            <p className="text-[11px] text-slate-300 font-light leading-relaxed mb-3">
+            <p className="text-xs text-slate-400 font-light leading-relaxed mb-4">
               {selectedComponent.description}
             </p>
 
             <button
               onClick={() => onExploreComponent && onExploreComponent(selectedComponent.id)}
-              className="w-full py-2 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-[11px] tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+              className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs tracking-wide rounded-full transition cursor-pointer active:scale-95"
             >
-              Explore {selectedComponent.name.split(" ")[0]}
+              Explore {selectedComponent.name.split(" ")[0]} →
             </button>
+          </div>
+        </Html>
+      )}
+
+      {/* SPATIAL 3D PROGRESSIVE LEARNING ANNOTATION (Steps 1 through 4 inside 3D space) */}
+      {activeLearningComponentId === "engine" && learningStep && learningStep < 5 && (
+        <Html
+          position={selectedWorldPos}
+          center
+          distanceFactor={6.5}
+          zIndexRange={[30, 0]}
+        >
+          <div className="bg-[#09090b]/95 border border-slate-800 rounded-2xl p-5 shadow-2xl text-left min-w-[260px] max-w-[320px] pointer-events-auto transition-all duration-300 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+              <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
+                ENGINE // STEP {learningStep} OF 4
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">SPATIAL LEARNING</span>
+            </div>
+
+            {learningStep === 1 && (
+              <>
+                <h3 className="text-lg font-medium text-white">{engineLearningData.name}</h3>
+                <p className="text-xs text-slate-400 font-light leading-relaxed">
+                  {engineLearningData.overview}
+                </p>
+                <button
+                  onClick={onNextLearningStep}
+                  className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs tracking-wide rounded-full transition cursor-pointer active:scale-95 mt-1"
+                >
+                  Understand Engine →
+                </button>
+              </>
+            )}
+
+            {learningStep === 2 && (
+              <>
+                <h3 className="text-base font-medium text-white">How Fuel Becomes Motion</h3>
+                <p className="text-xs text-slate-400 font-light leading-relaxed">
+                  Ignited fuel creates gas pressure driving pistons to turn the crankshaft.
+                </p>
+
+                <div className="py-1">
+                  <div className="flex flex-wrap gap-1 text-[10px] font-mono text-slate-300">
+                    {engineLearningData.energyFlow.map((item, idx) => (
+                      <span key={item.step} className="px-2 py-0.5 bg-slate-900 rounded border border-slate-800">
+                        {item.label} {idx < engineLearningData.energyFlow.length - 1 ? "→" : ""}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={onNextLearningStep}
+                  className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs tracking-wide rounded-full transition cursor-pointer active:scale-95"
+                >
+                  Explore 3D Mechanics →
+                </button>
+              </>
+            )}
+
+            {learningStep === 3 && (
+              <>
+                <h3 className="text-base font-medium text-white">Internal 3D Mechanics</h3>
+                <p className="text-xs text-slate-400 font-light leading-relaxed">
+                  Inspect cylinder bore, piston rod, spark plug, and valve assembly.
+                </p>
+                <button
+                  onClick={onNextLearningStep}
+                  className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs tracking-wide rounded-full transition cursor-pointer active:scale-95 mt-1"
+                >
+                  Master 4-Stroke Cycle →
+                </button>
+              </>
+            )}
+
+            {learningStep === 4 && currentStroke && (
+              <>
+                <div>
+                  <h3 className="text-base font-medium text-white">{currentStroke.name}</h3>
+                  <span className="text-[11px] font-mono text-slate-400 block mt-0.5">{currentStroke.action}</span>
+                </div>
+                <p className="text-xs text-slate-400 font-light leading-relaxed">
+                  {currentStroke.description}
+                </p>
+
+                <div className="grid grid-cols-4 gap-1.5 pt-1">
+                  {engineLearningData.fourStrokes.map((stroke, idx) => (
+                    <button
+                      key={stroke.id}
+                      onClick={() => onSelectStrokeIndex && onSelectStrokeIndex(idx)}
+                      className={`py-1.5 rounded-lg text-[10px] font-mono transition cursor-pointer ${
+                        currentStrokeIndex === idx
+                          ? "bg-white text-slate-950 font-medium"
+                          : "bg-slate-900 text-slate-400 border border-slate-800"
+                      }`}
+                    >
+                      S{idx + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={onCompleteLearning}
+                  className="w-full py-2.5 bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs tracking-wide rounded-full transition cursor-pointer active:scale-95 mt-2"
+                >
+                  Complete Engine Exploration ✓
+                </button>
+              </>
+            )}
           </div>
         </Html>
       )}
@@ -379,20 +486,20 @@ export function MotorcycleModel({
           distanceFactor={7}
           zIndexRange={[20, 0]}
         >
-          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-4 shadow-2xl text-left min-w-[200px] max-w-[240px] pointer-events-auto transition-all duration-300">
-            <span className="text-[9px] font-mono tracking-[0.2em] text-amber-400 uppercase block mb-1">
-              PUZZLE PIECE
+          <div className="bg-[#09090b]/95 border border-slate-800 rounded-2xl p-4 shadow-2xl text-left min-w-[200px] max-w-[240px] pointer-events-auto transition-all duration-300">
+            <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase block mb-1">
+              REBUILD PIECE
             </span>
-            <h3 className="text-sm font-bold text-white mb-1">
+            <h3 className="text-sm font-medium text-white mb-1">
               {selectedComponent.name}
             </h3>
-            <p className="text-[11px] text-slate-300 font-light leading-relaxed mb-3">
-              Drag component toward frame to connect, or click snap below.
+            <p className="text-[11px] text-slate-400 font-light leading-relaxed mb-3">
+              Drag toward frame to connect, or click snap below.
             </p>
 
             <button
               onClick={() => onSnapSuccess && onSnapSuccess(selectedComponent.id)}
-              className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-[11px] tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+              className="w-full py-2 bg-white hover:bg-slate-100 text-slate-950 font-medium text-[11px] tracking-wide rounded-full transition cursor-pointer active:scale-95"
             >
               Connect Component
             </button>

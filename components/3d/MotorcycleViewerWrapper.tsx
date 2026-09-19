@@ -31,7 +31,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       return (
         <div className="absolute inset-0 bg-[#070709] flex flex-col items-center justify-center p-6 text-center text-slate-400">
           <div className="text-sm font-light text-slate-300 mb-2">
-            Unable to render 3D puzzle stage
+            Unable to render 3D stage
           </div>
           <button
             onClick={() => this.setState({ hasError: false })}
@@ -58,10 +58,14 @@ interface MotorcycleViewerWrapperProps {
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
   activeLearningComponentId?: string | null;
-  currentStroke?: FourStrokeStep;
+  learningStep?: number | null;
+  currentStrokeIndex?: number;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
+  onNextLearningStep?: () => void;
+  onSelectStrokeIndex?: (idx: number) => void;
+  onCompleteLearning?: () => void;
   onSnapSuccess?: (id: string) => void;
   onSnapFail?: (id: string) => void;
   onUserInteraction?: () => void;
