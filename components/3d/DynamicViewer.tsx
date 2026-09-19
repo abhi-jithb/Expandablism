@@ -7,14 +7,9 @@ const MotorcycleViewerWrapper = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-[520px] bg-slate-950 border border-slate-800/80 rounded-xl flex flex-col items-center justify-center p-6 text-slate-400 select-none">
-        <div className="relative w-14 h-14 mb-4">
-          <div className="absolute inset-0 rounded-full border-2 border-blue-500/20 border-t-blue-500 animate-spin" />
-        </div>
-        <div className="font-mono text-xs text-blue-400 tracking-widest uppercase mb-1">
-          EXPANDABLISM // 3D LAB
-        </div>
-        <div className="text-xs text-slate-500">Initializing WebGL 3D Renderer...</div>
+      <div className="absolute inset-0 bg-[#070709] flex flex-col items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase transition-opacity duration-500">
+        <div className="w-6 h-6 border border-slate-700 border-t-white rounded-full animate-spin mb-3" />
+        <span>Loading 3D Scene</span>
       </div>
     ),
   }
@@ -25,6 +20,7 @@ interface DynamicViewerProps {
   minDistance?: number;
   maxDistance?: number;
   initialCameraPosition?: [number, number, number];
+  onUserInteraction?: () => void;
 }
 
 export function DynamicViewer(props: DynamicViewerProps) {

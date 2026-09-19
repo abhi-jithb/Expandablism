@@ -6,16 +6,17 @@ import * as THREE from "three";
 
 interface MotorcycleModelProps {
   modelPath: string;
+  scaleFactor?: number;
 }
 
-export function MotorcycleModel({ modelPath }: MotorcycleModelProps) {
+export function MotorcycleModel({ modelPath, scaleFactor = 4.2 }: MotorcycleModelProps) {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
   useLayoutEffect(() => {
     if (!scene) return;
 
-    // Clone scene to avoid mutating cached GLTF instances across re-mounts
+    // Clone scene bounds calculation to center geometry
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -25,17 +26,17 @@ export function MotorcycleModel({ modelPath }: MotorcycleModelProps) {
     scene.position.y = -center.y;
     scene.position.z = -center.z;
 
-    // Scale model to fit comfortably within a standard bounding sphere radius
+    // Scale model so it is visually HEROIC in the viewport
     const maxDim = Math.max(size.x, size.y, size.z);
-    const targetScale = 3.2 / (maxDim || 1);
+    const targetScale = scaleFactor / (maxDim || 1);
     
     if (groupRef.current) {
       groupRef.current.scale.setScalar(targetScale);
-      // Lift slightly so bottom rest position aligns above floor
-      groupRef.current.position.y = (size.y * targetScale) / 2 - 0.2;
+      // Lift slightly so contact shadow aligns underneath wheels
+      groupRef.current.position.y = (size.y * targetScale) / 2 - 0.45;
     }
 
-    // Enhance materials for modern lab aesthetic
+    // Studio material enhancement: realistic metallic surfaces and clean dark lab reflections
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
@@ -44,12 +45,13 @@ export function MotorcycleModel({ modelPath }: MotorcycleModelProps) {
 
         if (mesh.material) {
           const mat = mesh.material as THREE.MeshStandardMaterial;
-          mat.envMapIntensity = 1.2;
-          mat.roughness = Math.max(mat.roughness || 0.3, 0.25);
+          mat.envMapIntensity = 1.0;
+          mat.roughness = Math.max(mat.roughness || 0.25, 0.2);
+          mat.metalness = Math.min(mat.metalness || 0.5, 0.85);
         }
       }
     });
-  }, [scene]);
+  }, [scene, scaleFactor]);
 
   return (
     <group ref={groupRef}>
@@ -58,5 +60,5 @@ export function MotorcycleModel({ modelPath }: MotorcycleModelProps) {
   );
 }
 
-// Preload the model asset
+// Preload GLTF asset
 useGLTF.preload("/models/motorcycle.glb");
