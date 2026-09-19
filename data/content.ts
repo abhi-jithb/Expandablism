@@ -10,6 +10,8 @@ export const AREAS_DATA: Record<string, Area> = {
         id: "motorcycles",
         name: "Motorcycles",
         description: "Two-wheeled motor vehicles powered by internal combustion or electric motors.",
+        learningModel: "deconstruct_rebuild",
+        knowledgeConnections: ["Combustion Engine", "Thermodynamics", "Mechanical Power"],
         objects: [
           {
             id: "cafe-racer-motorcycle",
@@ -62,6 +64,70 @@ export const AREAS_DATA: Record<string, Area> = {
                 nodeName: "tanksCombined",
                 description: "Reservoir storing fuel, positioned over the engine for optimal center-of-mass balance.",
                 concepts: ["Fluid Dynamics", "Gravity Feed", "Weight Distribution"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  physics: {
+    id: "physics",
+    name: "Physics & Electronics",
+    description: "Fundamental laws of electrical circuits, power dissipation, and electromagnetism.",
+    topics: [
+      {
+        id: "circuits",
+        name: "Electric Circuit",
+        description: "Interactive laboratory exploring potential difference (Voltage), flow rate (Current), and flow restriction (Resistance).",
+        learningModel: "experiment",
+        knowledgeConnections: ["Ohm's Law", "Electrical Power", "Resistive Heating", "Electromagnetism"],
+        circuitConfig: {
+          initialVoltage: 12,
+          minVoltage: 1,
+          maxVoltage: 24,
+          initialResistance: 10,
+          minResistance: 1,
+          maxResistance: 100,
+          maxCurrentThreshold: 3.5
+        },
+        objects: [
+          {
+            id: "dc-circuit",
+            name: "Direct Current Circuit",
+            subtitle: "Ohm's Law Interactive Lab (V = I × R)",
+            description: "A closed electrical loop transferring chemical potential energy from a battery to light and heat energy in a lamp filament.",
+            initialCameraPosition: [0, 4, 6],
+            minDistance: 3.0,
+            maxDistance: 12.0,
+            components: [
+              {
+                id: "battery",
+                name: "DC Power Source (Battery)",
+                nodeName: "Battery",
+                description: "Maintains potential difference (Voltage) across the circuit terminals.",
+                concepts: ["Voltage", "Potential Difference", "Electromotive Force"]
+              },
+              {
+                id: "switch",
+                name: "Mechanical Switch",
+                nodeName: "Switch",
+                description: "Controls circuit continuity by physically opening or closing the conductive path.",
+                concepts: ["Circuit Continuity", "Open Circuit", "Closed Circuit"]
+              },
+              {
+                id: "resistor",
+                name: "Variable Ceramic Resistor",
+                nodeName: "Resistor",
+                description: "Restricts charge flow rate (Current) and dissipates excess electrical energy as heat.",
+                concepts: ["Resistance", "Ohm's Law", "Joule Heating"]
+              },
+              {
+                id: "bulb",
+                name: "Tungsten Filament Lamp",
+                nodeName: "Bulb",
+                description: "Converts electrical power into incandescent thermal light through filament resistance.",
+                concepts: ["Power Dissipation", "Incandescence", "Thermal Radiation"]
               }
             ]
           }

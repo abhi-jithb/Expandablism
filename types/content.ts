@@ -1,3 +1,5 @@
+export type LearningModel = "deconstruct_rebuild" | "experiment" | "build_connect";
+
 export interface ObjectComponent {
   id: string;
   name: string;
@@ -11,18 +13,31 @@ export interface ExplorableObject {
   name: string;
   subtitle: string;
   description: string;
-  modelPath: string;
+  modelPath?: string;
   initialCameraPosition: [number, number, number];
   minDistance: number;
   maxDistance: number;
   components: ObjectComponent[];
 }
 
+export interface CircuitExperimentConfig {
+  initialVoltage: number; // in Volts
+  minVoltage: number;
+  maxVoltage: number;
+  initialResistance: number; // in Ohms
+  minResistance: number;
+  maxResistance: number;
+  maxCurrentThreshold: number; // in Amps before overheating warning
+}
+
 export interface Topic {
   id: string;
   name: string;
   description: string;
+  learningModel: LearningModel;
+  knowledgeConnections?: string[];
   objects: ExplorableObject[];
+  circuitConfig?: CircuitExperimentConfig;
 }
 
 export interface Area {
@@ -32,3 +47,4 @@ export interface Area {
   icon?: string;
   topics: Topic[];
 }
+
