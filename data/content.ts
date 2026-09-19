@@ -134,6 +134,68 @@ export const AREAS_DATA: Record<string, Area> = {
         ]
       }
     ]
+  },
+  computing: {
+    id: "computing",
+    name: "Computer Architecture",
+    description: "Modular hardware assembly, bus interconnects, and digital system boot sequences.",
+    topics: [
+      {
+        id: "computers",
+        name: "Personal Computer Assembly",
+        description: "Interactive hardware lab exploring component relationships, socket interconnects, and POST boot sequences.",
+        learningModel: "build_connect",
+        knowledgeConnections: ["Transistors", "Logic Gates", "Boolean Logic", "System Bus Architecture"],
+        objects: [
+          {
+            id: "workstation-pc",
+            name: "Personal Computer System",
+            subtitle: "Modular Socket Interconnects & System Boot",
+            description: "A high-performance computing system constructed from interconnected semiconductor integrated circuits.",
+            initialCameraPosition: [0, 5, 6],
+            minDistance: 3.0,
+            maxDistance: 12.0,
+            components: [
+              {
+                id: "cpu",
+                name: "Central Processing Unit (CPU)",
+                nodeName: "CPU",
+                description: "Executes machine code instructions and performs arithmetic/logic calculations.",
+                concepts: ["Fetch-Decode-Execute", "ALU", "Semiconductor Logic"]
+              },
+              {
+                id: "ram",
+                name: "DDR5 High-Speed Memory (RAM)",
+                nodeName: "RAM",
+                description: "Provides ultra-fast volatile random-access storage for running software instructions.",
+                concepts: ["Volatile Memory", "Memory Bus", "Bandwidth"]
+              },
+              {
+                id: "gpu",
+                name: "Graphics Processing Unit (GPU)",
+                nodeName: "GPU",
+                description: "Accelerates parallel matrix transformations for real-time 3D graphics rendering.",
+                concepts: ["Parallel Processing", "Shader Core", "PCIe Bus"]
+              },
+              {
+                id: "storage",
+                name: "M.2 NVMe Solid State Drive (Storage)",
+                nodeName: "Storage",
+                description: "Persists operating system binaries and user data using non-volatile NAND flash memory.",
+                concepts: ["Non-Volatile Storage", "NAND Flash", "PCIe NVMe Protocol"]
+              },
+              {
+                id: "psu",
+                name: "24-Pin Main ATX Power Supply (PSU)",
+                nodeName: "PSU",
+                description: "Converts AC wall outlet electricity into regulated DC voltage rails (+12V, +5V, +3.3V).",
+                concepts: ["Voltage Regulation", "DC Power Rail", "Efficiency Rating"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 };
 
