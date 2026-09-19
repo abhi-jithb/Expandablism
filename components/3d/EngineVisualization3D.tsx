@@ -22,7 +22,6 @@ export function EngineVisualization3D({
   const exhaustValveRef = useRef<THREE.Mesh>(null);
   const sparkFlashRef = useRef<THREE.Mesh>(null);
 
-  // Animated angle state for continuous cycle if autoPlayCycle is active
   const angleRef = useRef(0);
 
   useFrame((state, delta) => {
@@ -39,13 +38,11 @@ export function EngineVisualization3D({
         crankshaftRef.current.rotation.z = rad;
       }
       
-      // Determine valves and spark based on cycle angle
       const modRad = rad % (Math.PI * 4);
       intakeOpen = modRad < Math.PI;
       sparkActive = modRad >= Math.PI * 2 && modRad < Math.PI * 2.2;
       exhaustOpen = modRad >= Math.PI * 3;
     } else if (currentStroke) {
-      // Step-driven stroke values
       targetPistonY = currentStroke.pistonPosition === 1.0 ? -0.22 : 0.22;
       intakeOpen = currentStroke.intakeValveOpen;
       exhaustOpen = currentStroke.exhaustValveOpen;
@@ -61,7 +58,6 @@ export function EngineVisualization3D({
       }
     }
 
-    // Lerp piston vertical movement
     if (pistonGroupRef.current) {
       pistonGroupRef.current.position.y = THREE.MathUtils.lerp(
         pistonGroupRef.current.position.y,
@@ -70,7 +66,6 @@ export function EngineVisualization3D({
       );
     }
 
-    // Lerp intake valve position
     if (intakeValveRef.current) {
       const targetValY = intakeOpen ? 0.32 : 0.42;
       intakeValveRef.current.position.y = THREE.MathUtils.lerp(
@@ -80,7 +75,6 @@ export function EngineVisualization3D({
       );
     }
 
-    // Lerp exhaust valve position
     if (exhaustValveRef.current) {
       const targetValY = exhaustOpen ? 0.32 : 0.42;
       exhaustValveRef.current.position.y = THREE.MathUtils.lerp(
@@ -90,10 +84,9 @@ export function EngineVisualization3D({
       );
     }
 
-    // Spark flash visibility & pulsing
     if (sparkFlashRef.current) {
       const mat = sparkFlashRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = sparkActive ? 0.9 : 0.0;
+      mat.opacity = sparkActive ? 0.95 : 0.0;
     }
   });
 
@@ -102,16 +95,16 @@ export function EngineVisualization3D({
       {/* Label indicating Educational Visualization Overlay */}
       <mesh position={[0, 0.75, 0]}>
         <sphereGeometry args={[0.02, 16, 16]} />
-        <meshBasicMaterial color="#38bdf8" />
+        <meshBasicMaterial color="#ffffff" />
       </mesh>
 
       {/* Glass Cylinder Outer Shell */}
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[0.26, 0.26, 0.65, 32, 1, true]} />
         <meshStandardMaterial
-          color="#38bdf8"
+          color="#ffffff"
           transparent
-          opacity={0.18}
+          opacity={0.16}
           roughness={0.1}
           metalness={0.1}
           side={THREE.DoubleSide}
@@ -121,51 +114,49 @@ export function EngineVisualization3D({
       {/* Top Cylinder Head Plate */}
       <mesh position={[0, 0.34, 0]}>
         <cylinderGeometry args={[0.28, 0.28, 0.05, 32]} />
-        <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.8} />
+        <meshStandardMaterial color="#27272a" roughness={0.3} metalness={0.8} />
       </mesh>
 
       {/* Spark Plug Electrode Assembly at Top Center */}
       <mesh position={[0, 0.45, 0]}>
         <cylinderGeometry args={[0.04, 0.04, 0.18, 16]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.2} metalness={0.9} />
+        <meshStandardMaterial color="#f4f4f5" roughness={0.2} metalness={0.9} />
       </mesh>
 
-      {/* Electric Spark Explosion Flash */}
+      {/* White Spark Flash */}
       <mesh ref={sparkFlashRef} position={[0, 0.31, 0]}>
         <sphereGeometry args={[0.09, 16, 16]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0} />
       </mesh>
 
       {/* Intake Valve (Left Top) */}
       <mesh ref={intakeValveRef} position={[-0.1, 0.42, 0]}>
         <cylinderGeometry args={[0.04, 0.01, 0.2, 16]} />
-        <meshStandardMaterial color={currentStroke?.intakeValveOpen ? "#38bdf8" : "#94a3b8"} />
+        <meshStandardMaterial color={currentStroke?.intakeValveOpen ? "#ffffff" : "#52525b"} />
       </mesh>
 
       {/* Exhaust Valve (Right Top) */}
       <mesh ref={exhaustValveRef} position={[0.1, 0.42, 0]}>
         <cylinderGeometry args={[0.04, 0.01, 0.2, 16]} />
-        <meshStandardMaterial color={currentStroke?.exhaustValveOpen ? "#ef4444" : "#94a3b8"} />
+        <meshStandardMaterial color={currentStroke?.exhaustValveOpen ? "#e4e4e7" : "#52525b"} />
       </mesh>
 
       {/* Piston Head & Connecting Rod Group */}
       <group ref={pistonGroupRef} position={[0, 0, 0]}>
-        {/* Metallic Piston Crown */}
         <mesh position={[0, 0, 0]}>
           <cylinderGeometry args={[0.24, 0.24, 0.16, 32]} />
-          <meshStandardMaterial color="#cbd5e1" roughness={0.25} metalness={0.85} />
+          <meshStandardMaterial color="#e4e4e7" roughness={0.25} metalness={0.85} />
         </mesh>
-        {/* Connecting Rod */}
         <mesh position={[0, -0.22, 0]}>
           <boxGeometry args={[0.05, 0.32, 0.05]} />
-          <meshStandardMaterial color="#64748b" roughness={0.4} metalness={0.7} />
+          <meshStandardMaterial color="#71717a" roughness={0.4} metalness={0.7} />
         </mesh>
       </group>
 
       {/* Crankshaft Shaft & Counterweight at Bottom */}
       <mesh ref={crankshaftRef} position={[0, -0.38, 0]}>
         <cylinderGeometry args={[0.14, 0.14, 0.1, 16]} />
-        <meshStandardMaterial color="#334155" roughness={0.3} metalness={0.9} />
+        <meshStandardMaterial color="#27272a" roughness={0.3} metalness={0.9} />
       </mesh>
     </group>
   );
