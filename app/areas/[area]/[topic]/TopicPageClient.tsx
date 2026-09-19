@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Topic } from "@/types/content";
 import { DynamicViewer } from "@/components/3d/DynamicViewer";
-import { MOTORCYCLE_COMPONENTS, DeconstructedComponent } from "@/data/deconstructionConfig";
+import { MOTORCYCLE_COMPONENTS } from "@/data/deconstructionConfig";
+import { LEARNING_CONTENT_MAP } from "@/data/learningContent";
 
 interface TopicPageClientProps {
   area: string;
@@ -16,9 +17,18 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
   const [isExploded, setIsExploded] = useState(false);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [hoveredComponentId, setHoveredComponentId] = useState<string | null>(null);
-  const [activeLearningComponent, setActiveLearningComponent] = useState<DeconstructedComponent | null>(null);
+
+  // Progressive Learning State
+  const [activeLearningComponentId, setActiveLearningComponentId] = useState<string | null>(null);
+  const [learningStep, setLearningStep] = useState<number | null>(null); // 1, 2, 3, 4, 5
+  const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(null);
+  const [currentStrokeIndex, setCurrentStrokeIndex] = useState<number>(0);
+
+  // Progress Tracking State
+  const [exploredComponentIds, setExploredComponentIds] = useState<Set<string>>(new Set());
 
   const explorableObject = topicData.objects[0];
+  const engineData = LEARNING_CONTENT_MAP["engine"];
 
   const handleUserInteraction = () => {
     if (!hasInteracted) {
@@ -34,15 +44,27 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
   const handleReassemble = () => {
     setIsExploded(false);
     setSelectedComponentId(null);
-    setActiveLearningComponent(null);
+    setActiveLearningComponentId(null);
+    setLearningStep(null);
   };
 
   const handleExploreComponent = (componentId: string) => {
-    const comp = MOTORCYCLE_COMPONENTS.find((c) => c.id === componentId);
-    if (comp) {
-      setActiveLearningComponent(comp);
+    if (componentId === "engine") {
+      setActiveLearningComponentId("engine");
+      setLearningStep(1);
+      setSelectedComponentId("engine");
     }
   };
+
+  const handleCompleteLearning = () => {
+    setExploredComponentIds((prev) => new Set(prev).add("engine"));
+    setActiveLearningComponentId(null);
+    setLearningStep(null);
+    setSelectedComponentId(null);
+  };
+
+  const currentStroke = engineData.fourStrokes[currentStrokeIndex];
+  const selectedHotspot = engineData.hotspots.find((h) => h.id === selectedHotspotId);
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#070709] text-slate-100 font-sans select-none">
@@ -56,6 +78,8 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
           isExploded={isExploded}
           selectedComponentId={selectedComponentId}
           hoveredComponentId={hoveredComponentId}
+          activeLearningComponentId={activeLearningComponentId}
+          currentStroke={learningStep === 4 ? currentStroke : undefined}
           onSelectComponent={setSelectedComponentId}
           onHoverComponent={setHoveredComponentId}
           onExploreComponent={handleExploreComponent}
@@ -74,9 +98,15 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
           </span>
         </div>
 
-        {/* Minimal Header Action or Controls */}
+        {/* Lightweight Progress Badge & Header Actions */}
         <div className="flex items-center space-x-4 pointer-events-auto">
-          {isExploded ? (
+          {isExploded && (
+            <span className="text-[11px] font-mono text-slate-400 bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-800">
+              Motorcycle &middot; <span className="text-blue-400 font-bold">{exploredComponentIds.size}</span> / 9 components explored
+            </span>
+          )}
+
+          {isExploded && (
             <button
               onClick={handleReassemble}
               className="px-4 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700/80 text-xs font-mono text-slate-300 hover:text-white hover:border-slate-500 transition flex items-center space-x-2 cursor-pointer shadow-lg active:scale-95"
@@ -84,12 +114,6 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
               <span>↺</span>
               <span>Reassemble</span>
             </button>
-          ) : (
-            <nav className="flex items-center space-x-6 text-xs font-medium text-slate-400">
-              <span className="hover:text-slate-200 cursor-pointer transition">Explore</span>
-              <span className="hover:text-slate-200 cursor-pointer transition opacity-50">Learn</span>
-              <span className="hover:text-slate-200 cursor-pointer transition opacity-50">Rebuild</span>
-            </nav>
           )}
         </div>
       </header>
@@ -110,7 +134,6 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
               Understand the machine, one component at a time.
             </p>
 
-            {/* Sleek Pill CTA Button */}
             <button
               onClick={handleStartExploring}
               className="mt-3 px-8 py-3 rounded-full bg-white text-slate-950 font-medium text-xs tracking-wider uppercase transition-all duration-300 hover:scale-105 hover:bg-slate-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] active:scale-95 cursor-pointer"
@@ -121,38 +144,212 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
         </div>
       )}
 
-      {/* Progressive Learning Intro Modal (Minimal Museum Card) */}
-      {activeLearningComponent && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-left space-y-4 relative">
-            <button
-              onClick={() => setActiveLearningComponent(null)}
-              className="absolute top-6 right-6 text-slate-500 hover:text-white text-sm font-mono"
-            >
-              ✕
-            </button>
-
-            <span className="text-[10px] font-mono tracking-[0.25em] text-blue-400 uppercase block">
-              COMPONENT EXPLORATION // 01
+      {/* STEP 1: Engine Focus Overlay */}
+      {activeLearningComponentId === "engine" && learningStep === 1 && (
+        <div className="absolute inset-x-0 bottom-12 z-20 flex flex-col items-center text-center px-6 pointer-events-none animate-fadeIn">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-6 max-w-md w-full shadow-2xl pointer-events-auto space-y-3">
+            <span className="text-[10px] font-mono tracking-[0.25em] text-blue-400 uppercase">
+              STEP 1 // ENGINE FOCUS
             </span>
+            <h2 className="text-2xl font-bold text-white">{engineData.name}</h2>
+            <p className="text-xs text-slate-300 font-light leading-relaxed">
+              {engineData.overview}
+            </p>
+            <button
+              onClick={() => setLearningStep(2)}
+              className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95 mt-2"
+            >
+              Understand Engine
+            </button>
+          </div>
+        </div>
+      )}
 
-            <h2 className="text-2xl font-bold text-white tracking-tight">
-              {activeLearningComponent.name}
-            </h2>
+      {/* STEP 2: Basic Understanding & Energy Sequence */}
+      {activeLearningComponentId === "engine" && learningStep === 2 && (
+        <div className="absolute inset-x-0 bottom-12 z-20 flex flex-col items-center text-center px-6 pointer-events-none animate-fadeIn">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-6 max-w-lg w-full shadow-2xl pointer-events-auto space-y-4">
+            <span className="text-[10px] font-mono tracking-[0.25em] text-blue-400 uppercase">
+              STEP 2 // BASIC UNDERSTANDING
+            </span>
+            <h2 className="text-xl font-bold text-white">How Fuel Becomes Motion</h2>
 
-            <p className="text-sm text-slate-300 font-light leading-relaxed">
-              {activeLearningComponent.description}
+            <p className="text-xs text-slate-300 font-light leading-relaxed">
+              Fuel is ignited inside sealed cylinders, creating gas pressure that drives pistons to turn the crankshaft.
             </p>
 
-            <div className="pt-4 flex items-center justify-between border-t border-slate-800/80">
-              <span className="text-xs font-mono text-slate-500">CONCEPT LAYER READY</span>
-              <button
-                onClick={() => setActiveLearningComponent(null)}
-                className="px-6 py-2.5 bg-white text-slate-950 rounded-full font-medium text-xs tracking-wide uppercase hover:bg-slate-200 transition"
-              >
-                Close View
-              </button>
+            {/* Interactive Visual Sequence */}
+            <div className="py-2">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2">
+                Energy Conversion Sequence
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-mono">
+                {engineData.energyFlow.map((item, idx) => (
+                  <React.Fragment key={item.step}>
+                    <span className="px-2.5 py-1 bg-slate-900 border border-slate-800 text-blue-300 rounded-md">
+                      {item.label}
+                    </span>
+                    {idx < engineData.energyFlow.length - 1 && (
+                      <span className="text-slate-600">→</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
+
+            <button
+              onClick={() => setLearningStep(3)}
+              className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+            >
+              Explore 3D Mechanics
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3: Interactive Hotspots */}
+      {activeLearningComponentId === "engine" && learningStep === 3 && (
+        <div className="absolute inset-x-0 bottom-12 z-20 flex flex-col items-center text-center px-6 pointer-events-none animate-fadeIn">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-6 max-w-xl w-full shadow-2xl pointer-events-auto space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono tracking-[0.25em] text-blue-400 uppercase">
+                STEP 3 // 3D CONCEPT HOTSPOTS
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">EDUCATIONAL SCHEMATIC</span>
+            </div>
+
+            <h2 className="text-xl font-bold text-white">Internal Engine Components</h2>
+
+            {/* Hotspot Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {engineData.hotspots.map((hotspot) => (
+                <button
+                  key={hotspot.id}
+                  onClick={() => setSelectedHotspotId(hotspot.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition cursor-pointer ${
+                    selectedHotspotId === hotspot.id
+                      ? "bg-white text-slate-950 font-bold"
+                      : "bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700"
+                  }`}
+                >
+                  {hotspot.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Selected Hotspot Description */}
+            {selectedHotspot && (
+              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl text-left text-xs text-slate-300">
+                <span className="font-bold text-white block mb-0.5">{selectedHotspot.name}</span>
+                <span>{selectedHotspot.description}</span>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                setLearningStep(4);
+                setCurrentStrokeIndex(0);
+              }}
+              className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95 mt-2"
+            >
+              Master 4-Stroke Cycle
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4: Four-Stroke Cycle Interactive Simulation */}
+      {activeLearningComponentId === "engine" && learningStep === 4 && (
+        <div className="absolute inset-x-0 bottom-10 z-20 flex flex-col items-center text-center px-6 pointer-events-none animate-fadeIn">
+          <div className="bg-slate-950/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-6 max-w-xl w-full shadow-2xl pointer-events-auto space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono tracking-[0.25em] text-blue-400 uppercase">
+                STEP 4 // FOUR-STROKE CYCLE
+              </span>
+              <span className="text-[10px] font-mono text-slate-400">3D ANIMATED SIMULATION</span>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-white">{currentStroke.name}</h2>
+              <p className="text-xs text-blue-400 font-mono mt-0.5">{currentStroke.action}</p>
+            </div>
+
+            <p className="text-xs text-slate-300 font-light leading-relaxed min-h-[40px]">
+              {currentStroke.description}
+            </p>
+
+            {/* 4 Stroke Step Selector Buttons */}
+            <div className="grid grid-cols-4 gap-2 pt-1">
+              {engineData.fourStrokes.map((stroke, idx) => (
+                <button
+                  key={stroke.id}
+                  onClick={() => setCurrentStrokeIndex(idx)}
+                  className={`py-2 px-1 rounded-xl text-[11px] font-mono transition cursor-pointer ${
+                    currentStrokeIndex === idx
+                      ? "bg-white text-slate-950 font-bold shadow-md"
+                      : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200"
+                  }`}
+                >
+                  Stroke {idx + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setLearningStep(5)}
+              className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95 mt-2"
+            >
+              Complete Engine Exploration
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 5: Knowledge Completion Modal */}
+      {activeLearningComponentId === "engine" && learningStep === 5 && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-left space-y-5">
+            <span className="text-[10px] font-mono tracking-[0.25em] text-emerald-400 uppercase block">
+              MASTERY UNLOCKED // STEP 5
+            </span>
+
+            <div>
+              <h2 className="text-2xl font-bold text-white">ENGINE EXPLORED</h2>
+              <p className="text-xs text-slate-400 mt-1 font-light">
+                You have mastered the foundational mechanics of the internal combustion engine.
+              </p>
+            </div>
+
+            <div className="space-y-2 py-2 border-y border-slate-800/80">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block mb-1">
+                Discovered Concepts:
+              </span>
+              <div className="space-y-1.5 text-xs text-slate-200 font-mono">
+                <div className="flex items-center space-x-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Engine purpose & energy conversion</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Cylinder bore, Piston & Crankshaft</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Spark ignition & valve timing</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Four-stroke cycle mechanics</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCompleteLearning}
+              className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+            >
+              Continue Exploring
+            </button>
           </div>
         </div>
       )}
@@ -160,7 +357,7 @@ export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
       {/* Subtle Interaction Hint (Bottom Viewport) */}
       <div
         className={`absolute bottom-4 inset-x-0 z-10 flex justify-center pointer-events-none transition-opacity duration-700 ${
-          hasInteracted ? "opacity-0" : "opacity-60"
+          hasInteracted || learningStep !== null ? "opacity-0" : "opacity-60"
         }`}
       >
         <span className="text-[11px] font-mono text-slate-400 tracking-widest uppercase">

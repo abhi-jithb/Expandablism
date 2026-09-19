@@ -5,6 +5,8 @@ import { useGLTF, Html } from "@react-three/drei";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { MOTORCYCLE_COMPONENTS, DeconstructedComponent } from "@/data/deconstructionConfig";
+import { EngineVisualization3D } from "./EngineVisualization3D";
+import { FourStrokeStep } from "@/data/learningContent";
 
 interface MotorcycleModelProps {
   modelPath: string;
@@ -12,6 +14,8 @@ interface MotorcycleModelProps {
   isExploded: boolean;
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
+  activeLearningComponentId?: string | null;
+  currentStroke?: FourStrokeStep;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
@@ -31,6 +35,8 @@ export function MotorcycleModel({
   isExploded,
   selectedComponentId,
   hoveredComponentId,
+  activeLearningComponentId,
+  currentStroke,
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
@@ -44,13 +50,16 @@ export function MotorcycleModel({
     [selectedComponentId]
   );
 
-  // Position of selected component in 3D world space for HTML label anchoring
+  const engineComponent = useMemo(
+    () => MOTORCYCLE_COMPONENTS.find((c) => c.id === "engine"),
+    []
+  );
+
   const [selectedWorldPos, setSelectedWorldPos] = useState<[number, number, number]>([0, 0, 0]);
 
   useLayoutEffect(() => {
     if (!scene) return;
 
-    // Clone scene bounds calculation to center geometry
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -67,12 +76,10 @@ export function MotorcycleModel({
       groupRef.current.position.y = (size.y * targetScale) / 2 - 0.45;
     }
 
-    // Traverse scene and index nodes belonging to conceptual components
     const nodeMap: NodeData[] = [];
 
     scene.traverse((child) => {
       if (child.name) {
-        // Find matching component
         const comp = MOTORCYCLE_COMPONENTS.find((c) => c.nodeNames.includes(child.name));
         if (comp) {
           const materials: THREE.MeshStandardMaterial[] = [];
@@ -94,9 +101,7 @@ export function MotorcycleModel({
             }
           });
 
-          // Tag child object with component ID for raycasting
           child.userData.componentId = comp.id;
-
           const initialPos = child.position.clone();
           nodeMap.push({
             object: child,
@@ -112,37 +117,39 @@ export function MotorcycleModel({
     nodesDataRef.current = nodeMap;
   }, [scene, scaleFactor]);
 
-  // Frame animation loop for smooth 800-1200ms lerping & opacity transitions
   useFrame((state, delta) => {
     const lerpFactor = Math.min(delta * 6.5, 0.2);
 
     nodesDataRef.current.forEach(({ object, initialPos, component, materials }) => {
-      // 1. Calculate target exploded position
       const [ex, ey, ez] = component.explodedPosition;
       const targetX = isExploded ? initialPos.x + ex : initialPos.x;
       const targetY = isExploded ? initialPos.y + ey : initialPos.y;
       const targetZ = isExploded ? initialPos.z + ez : initialPos.z;
 
-      // Smooth position lerp
       object.position.x = THREE.MathUtils.lerp(object.position.x, targetX, lerpFactor);
       object.position.y = THREE.MathUtils.lerp(object.position.y, targetY, lerpFactor);
       object.position.z = THREE.MathUtils.lerp(object.position.z, targetZ, lerpFactor);
 
-      // 2. Opacity & Highlight lerp
       const isSelected = selectedComponentId === component.id;
       const isHovered = hoveredComponentId === component.id;
-      const hasSelection = selectedComponentId !== null;
+      const isDeepLearning = activeLearningComponentId !== null && activeLearningComponentId !== undefined;
+      const isLearningActive = activeLearningComponentId === component.id;
 
-      const targetOpacity = hasSelection ? (isSelected ? 1.0 : 0.35) : 1.0;
+      let targetOpacity = 1.0;
+      if (isDeepLearning) {
+        targetOpacity = isLearningActive ? 1.0 : 0.18;
+      } else if (selectedComponentId) {
+        targetOpacity = isSelected ? 1.0 : 0.35;
+      }
 
       materials.forEach((mat) => {
         mat.transparent = targetOpacity < 0.99;
         mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, lerpFactor);
 
-        if (isHovered && !hasSelection) {
+        if (isHovered && !selectedComponentId && !isDeepLearning) {
           mat.emissive.setHex(0x38bdf8);
           mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0.25, lerpFactor);
-        } else if (isSelected) {
+        } else if (isSelected || isLearningActive) {
           mat.emissive.setHex(0x60a5fa);
           mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, 0.35, lerpFactor);
         } else {
@@ -151,7 +158,6 @@ export function MotorcycleModel({
       });
     });
 
-    // Update selected component world position for HTML label anchoring
     if (selectedComponentId) {
       const selectedNodes = nodesDataRef.current.filter(
         (n) => n.component.id === selectedComponentId
@@ -164,8 +170,8 @@ export function MotorcycleModel({
     }
   });
 
-  // Handle pointer interactions on 3D meshes using R3F ThreeEvent
   const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
+    if (activeLearningComponentId) return;
     e.stopPropagation();
     let curr: THREE.Object3D | null = e.object;
     while (curr) {
@@ -178,11 +184,13 @@ export function MotorcycleModel({
   };
 
   const handlePointerOut = (e: ThreeEvent<PointerEvent>) => {
+    if (activeLearningComponentId) return;
     e.stopPropagation();
     onHoverComponent(null);
   };
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    if (activeLearningComponentId) return;
     e.stopPropagation();
     let curr: THREE.Object3D | null = e.object;
     while (curr) {
@@ -194,6 +202,8 @@ export function MotorcycleModel({
     }
   };
 
+  const enginePos = engineComponent?.explodedPosition || [0, -0.15, 0.5];
+
   return (
     <group
       ref={groupRef}
@@ -203,8 +213,17 @@ export function MotorcycleModel({
     >
       <primitive object={scene} />
 
+      {/* 3D Educational Visualization overlay during Engine Learning Mode */}
+      {activeLearningComponentId === "engine" && (
+        <EngineVisualization3D
+          position={[enginePos[0], enginePos[1] + 0.1, enginePos[2] + 0.2]}
+          currentStroke={currentStroke}
+          autoPlayCycle={!currentStroke}
+        />
+      )}
+
       {/* Floating 3D Label next to Selected Component */}
-      {selectedComponent && isExploded && (
+      {selectedComponent && isExploded && !activeLearningComponentId && (
         <Html
           position={selectedWorldPos}
           center
@@ -235,5 +254,4 @@ export function MotorcycleModel({
   );
 }
 
-// Preload GLTF asset
 useGLTF.preload("/models/motorcycle.glb");

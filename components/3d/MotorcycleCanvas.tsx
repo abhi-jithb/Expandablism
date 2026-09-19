@@ -7,16 +7,19 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { MotorcycleModel } from "./MotorcycleModel";
 import { MOTORCYCLE_COMPONENTS } from "@/data/deconstructionConfig";
+import { FourStrokeStep } from "@/data/learningContent";
 
 interface CameraFocusControllerProps {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
   selectedComponentId: string | null;
+  activeLearningComponentId?: string | null;
   isExploded: boolean;
 }
 
 function CameraFocusController({
   controlsRef,
   selectedComponentId,
+  activeLearningComponentId,
   isExploded,
 }: CameraFocusControllerProps) {
   useFrame((state, delta) => {
@@ -25,11 +28,13 @@ function CameraFocusController({
     const lerpFactor = Math.min(delta * 4.0, 0.15);
     const targetVector = new THREE.Vector3(0, 0, 0);
 
-    if (isExploded && selectedComponentId) {
-      const comp = MOTORCYCLE_COMPONENTS.find((c) => c.id === selectedComponentId);
+    const activeId = activeLearningComponentId || selectedComponentId;
+
+    if (isExploded && activeId) {
+      const comp = MOTORCYCLE_COMPONENTS.find((c) => c.id === activeId);
       if (comp) {
         const [ex, ey, ez] = comp.explodedPosition;
-        targetVector.set(ex * 0.4, ey * 0.4, ez * 0.4);
+        targetVector.set(ex * 0.45, ey * 0.45, ez * 0.45);
       }
     }
 
@@ -48,6 +53,8 @@ interface MotorcycleCanvasProps {
   isExploded: boolean;
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
+  activeLearningComponentId?: string | null;
+  currentStroke?: FourStrokeStep;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
@@ -71,6 +78,8 @@ export function MotorcycleCanvas({
   isExploded,
   selectedComponentId,
   hoveredComponentId,
+  activeLearningComponentId,
+  currentStroke,
   onSelectComponent,
   onHoverComponent,
   onExploreComponent,
@@ -161,6 +170,8 @@ export function MotorcycleCanvas({
             isExploded={isExploded}
             selectedComponentId={selectedComponentId}
             hoveredComponentId={hoveredComponentId}
+            activeLearningComponentId={activeLearningComponentId}
+            currentStroke={currentStroke}
             onSelectComponent={onSelectComponent}
             onHoverComponent={onHoverComponent}
             onExploreComponent={onExploreComponent}
@@ -170,6 +181,7 @@ export function MotorcycleCanvas({
         <CameraFocusController
           controlsRef={controlsRef}
           selectedComponentId={selectedComponentId}
+          activeLearningComponentId={activeLearningComponentId}
           isExploded={isExploded}
         />
 
@@ -179,11 +191,11 @@ export function MotorcycleCanvas({
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          autoRotate={isAutoRotating && !selectedComponentId}
+          autoRotate={isAutoRotating && !selectedComponentId && !activeLearningComponentId}
           autoRotateSpeed={0.7}
           rotateSpeed={0.6}
           zoomSpeed={0.75}
-          minDistance={minDistance}
+          minDistance={activeLearningComponentId ? 1.2 : minDistance}
           maxDistance={maxDistance}
           maxPolarAngle={Math.PI / 2 + 0.02}
           minPolarAngle={Math.PI / 6}

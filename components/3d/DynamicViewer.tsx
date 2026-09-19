@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { FourStrokeStep } from "@/data/learningContent";
 
 const MotorcycleViewerWrapper = dynamic(
   () => import("./MotorcycleViewerWrapper"),
@@ -9,7 +10,7 @@ const MotorcycleViewerWrapper = dynamic(
     loading: () => (
       <div className="absolute inset-0 bg-[#070709] flex flex-col items-center justify-center text-slate-500 font-mono text-xs tracking-widest uppercase transition-opacity duration-500">
         <div className="w-6 h-6 border border-slate-700 border-t-white rounded-full animate-spin mb-3" />
-        <span>Loading Deconstruction Engine</span>
+        <span>Loading Knowledge Engine</span>
       </div>
     ),
   }
@@ -23,6 +24,8 @@ interface DynamicViewerProps {
   isExploded: boolean;
   selectedComponentId: string | null;
   hoveredComponentId: string | null;
+  activeLearningComponentId?: string | null;
+  currentStroke?: FourStrokeStep;
   onSelectComponent: (id: string | null) => void;
   onHoverComponent: (id: string | null) => void;
   onExploreComponent?: (id: string) => void;
