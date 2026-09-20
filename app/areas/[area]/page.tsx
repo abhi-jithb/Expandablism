@@ -11,7 +11,7 @@ export default async function AreaPage({
 
   if (!areaData) {
     return (
-      <main className="min-h-screen bg-[#050505] text-slate-200 px-6 py-12 flex flex-col items-center justify-center font-sans select-none">
+      <main className="min-h-screen bg-black text-white px-6 py-12 flex flex-col items-center justify-center font-sans select-none">
         <div className="max-w-md text-center">
           <Link
             href="/"
@@ -29,9 +29,12 @@ export default async function AreaPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white selection:bg-white selection:text-black font-sans">
+    <main className="min-h-screen bg-black text-white selection:bg-white selection:text-black font-sans relative overflow-hidden">
+      {/* Background Grid */}
+      <div className="absolute inset-0 bg-dot-grid opacity-35 pointer-events-none z-0"></div>
+
       {/* Header Chrome */}
-      <header className="border-b border-zinc-900 bg-[#050505] sticky top-0 z-20">
+      <header className="border-b border-zinc-900 bg-black/90 sticky top-0 z-20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link
@@ -49,7 +52,7 @@ export default async function AreaPage({
       </header>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
         <div className="max-w-3xl mb-16">
           <span className="inline-block text-[10px] font-mono text-zinc-400 uppercase tracking-widest px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 mb-4">
             KNOWLEDGE DOMAIN // {areaData.id.toUpperCase()}
@@ -67,7 +70,7 @@ export default async function AreaPage({
             <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">
               Select Exploration Topic
             </span>
-            <span className="text-xs font-mono text-zinc-500">{areaData.topics.length} TOPIC</span>
+            <span className="text-xs font-mono text-zinc-500">{areaData.topics.length} TOPICS ACTIVE</span>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -75,11 +78,11 @@ export default async function AreaPage({
               <Link
                 key={topic.id}
                 href={`/areas/${areaData.id}/${topic.id}`}
-                className="group relative rounded-2xl border border-zinc-900 bg-[#09090b] p-8 transition-all duration-300 hover:border-zinc-700 hover:bg-[#121215] flex flex-col justify-between"
+                className="group relative rounded-2xl border border-zinc-800/80 bg-[#09090b] p-8 transition-all duration-300 hover:border-white hover:bg-[#111114] flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
                       TOPIC // {topic.id.toUpperCase()}
                     </span>
                     <span className="text-xs font-mono text-zinc-500 group-hover:text-white group-hover:translate-x-1 transition-transform">
@@ -98,7 +101,7 @@ export default async function AreaPage({
 
                 <div className="mt-10 pt-4 border-t border-zinc-900 flex items-center justify-between text-xs text-zinc-500 font-mono">
                   <span>{topic.objects.length} OBJECT EXPLORABLE</span>
-                  <span className="text-zinc-300 group-hover:text-white">OPEN LAB</span>
+                  <span className="text-zinc-200 group-hover:text-white font-semibold">OPEN LAB →</span>
                 </div>
               </Link>
             ))}
