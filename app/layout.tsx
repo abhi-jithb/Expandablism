@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Expandablism — Interactive 3D Knowledge Exploration",
-  description: "Explore, understand, deconstruct, and master complex 3D mechanisms down to fundamental concepts.",
+  title: "Expandablism — Spatial Knowledge Laboratory",
+  description: "Explore, simulate, and reconstruct complex physical mechanisms down to fundamental concepts.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,9 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#050505] text-slate-100 font-sans">{children}</body>
+      <body className="min-h-full flex flex-col bg-black text-white font-sans selection:bg-white selection:text-black">
+        {children}
+      </body>
     </html>
   );
 }
