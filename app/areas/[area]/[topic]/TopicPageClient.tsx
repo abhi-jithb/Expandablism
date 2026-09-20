@@ -5,6 +5,7 @@ import { Topic } from "@/types/content";
 import { DeconstructRebuildExperience } from "@/components/experiences/DeconstructRebuildExperience";
 import { CircuitExperimentExperience } from "@/components/experiences/CircuitExperimentExperience";
 import { ComputerAssemblyExperience } from "@/components/experiences/ComputerAssemblyExperience";
+import { BrainExperience } from "@/components/experiences/BrainExperience";
 
 interface TopicPageClientProps {
   area: string;
@@ -13,6 +14,8 @@ interface TopicPageClientProps {
 
 export function TopicPageClient({ area, topicData }: TopicPageClientProps) {
   switch (topicData.learningModel) {
+    case "brain_interactive":
+      return <BrainExperience area={area} topicData={topicData} />;
     case "experiment":
       return <CircuitExperimentExperience area={area} topicData={topicData} />;
     case "build_connect":
