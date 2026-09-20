@@ -1,4 +1,4 @@
-export type LearningModel = "deconstruct_rebuild" | "experiment" | "build_connect";
+export type LearningModel = "deconstruct_rebuild" | "experiment" | "build_connect" | "brain_interactive";
 
 export interface ObjectComponent {
   id: string;

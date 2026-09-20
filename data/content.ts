@@ -196,6 +196,102 @@ export const AREAS_DATA: Record<string, Area> = {
         ]
       }
     ]
+  },
+  brain: {
+    id: "brain",
+    name: "Brain & Neuroscience",
+    description: "Spatial neural architecture, bio-chemical reactions, stress hijacks, and synaptic plasticity.",
+    topics: [
+      {
+        id: "neuroscience",
+        name: "Brain Neural Circuits & Reactions",
+        description: "Interactive 3D laboratory exploring Prefrontal Cortex, Amygdala panic hijacks, Dopamine burnout, and Synaptic Action Potentials.",
+        learningModel: "brain_interactive",
+        knowledgeConnections: ["Prefrontal Cortex", "Amygdala Hijack", "Dopamine Downregulation", "Synaptic Plasticity"],
+        objects: [
+          {
+            id: "human-brain-system",
+            name: "Human Neural System",
+            subtitle: "3D Bio-Electric Signal Transmission & Neurochemistry",
+            description: "An interactive spatial brain model detailing key anatomical regions, neurotransmitter balances, and dynamic stress/focus states.",
+            initialCameraPosition: [0, 2.5, 4.5],
+            minDistance: 2.0,
+            maxDistance: 8.0,
+            components: [
+              {
+                id: "prefrontal_cortex",
+                name: "Prefrontal Cortex",
+                nodeName: "PFC",
+                description: "Executive control, logical decision making, impulse regulation, and working memory.",
+                concepts: ["Executive Function", "Decision Fatigue", "Cognitive Reserve"]
+              },
+              {
+                id: "amygdala",
+                name: "Amygdala",
+                nodeName: "Amygdala",
+                description: "Almond-shaped threat detector processing survival signals and fight-or-flight reactions.",
+                concepts: ["Cortisol Hijack", "Fight-or-Flight", "Fear Conditioning"]
+              },
+              {
+                id: "hippocampus",
+                name: "Hippocampus",
+                nodeName: "Hippocampus",
+                description: "Seahorse-shaped memory index converting working memory into permanent storage.",
+                concepts: ["Long-Term Potentiation", "Memory Consolidation", "Neurogenesis"]
+              },
+              {
+                id: "synaptic_network",
+                name: "Synaptic Terminals",
+                nodeName: "Synapses",
+                description: "Microscopic gaps transferring electrical signals into chemical neurotransmitters.",
+                concepts: ["Dopamine Downregulation", "Acetylcholine Focus", "Synaptic Plasticity"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "cognitive-states",
+        name: "Cognitive Focus & Brain Restoration",
+        description: "Spatial exploration of Default Mode Network, Flow State synchrony, and Sleep Glymphatic Wash.",
+        learningModel: "brain_interactive",
+        knowledgeConnections: ["Default Mode Network", "Flow State", "Glymphatic System", "Memory Consolidation"],
+        objects: [
+          {
+            id: "brain-restoration-system",
+            name: "Neural Oscillations & Restoration",
+            subtitle: "Brain Waves, Sleep Cleansing & Cognitive Flow",
+            description: "An interactive laboratory demonstrating how slow-wave sleep flushes metabolic brain waste and solidifies memory.",
+            initialCameraPosition: [0, 2.5, 4.5],
+            minDistance: 2.0,
+            maxDistance: 8.0,
+            components: [
+              {
+                id: "prefrontal_cortex",
+                name: "Neocortical Vault",
+                nodeName: "PFC",
+                description: "Permanent long-term storage site for consolidated skills and memories.",
+                concepts: ["Neocortical Encoding", "Flow Synchrony"]
+              },
+              {
+                id: "hippocampus",
+                name: "Hippocampal Transfer Engine",
+                nodeName: "Hippocampus",
+                description: "Transfers daytime experiences to neocortex during slow-wave NREM sleep.",
+                concepts: ["Memory Replay", "Spaced Practice"]
+              },
+              {
+                id: "synaptic_network",
+                name: "Glymphatic Fluid Channels",
+                nodeName: "Synapses",
+                description: "Cerebrospinal fluid pathways washing away toxic protein accumulation during sleep.",
+                concepts: ["Glymphatic Clearance", "Slow-Wave Delta Waves"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 };
 
