@@ -38,22 +38,22 @@ export function SpatialToolbox({
 
   return (
     <div className="w-full pointer-events-auto">
-      <div className="bg-[#09090b]/95 border border-zinc-800 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden font-sans">
+      <div className="bg-white/95 border border-slate-200 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden font-sans">
         {/* Toolbox Header Strip */}
-        <div className="px-5 py-3 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-950/80">
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50/90">
           <div className="flex items-center space-x-3">
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-zinc-200 font-bold">
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse"></span>
+            <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-slate-800 font-bold">
               🧰 {title}
             </span>
-            <span className="text-[10px] font-mono text-zinc-500 border-l border-zinc-800 pl-3">
+            <span className="text-[10px] font-mono text-slate-500 border-l border-slate-300 pl-3">
               {inToolboxCount} / {items.length} Ready
             </span>
           </div>
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="text-xs font-mono text-zinc-400 hover:text-white transition flex items-center space-x-1 cursor-pointer"
+            className="text-xs font-mono text-slate-600 hover:text-slate-900 transition flex items-center space-x-1 cursor-pointer font-medium"
           >
             <span>{isOpen ? "Collapse Tray ▲" : "Open Toolbox ▼"}</span>
           </button>
@@ -67,7 +67,7 @@ export function SpatialToolbox({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="p-4 space-y-3"
+              className="p-4 space-y-3 bg-slate-50/50"
             >
               {/* Horizontal Parts Inventory Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-36 overflow-y-auto pr-1">
@@ -79,12 +79,12 @@ export function SpatialToolbox({
                     <button
                       key={item.id}
                       onClick={() => onSelectItem(item.id)}
-                      className={`p-3 rounded-xl text-left transition cursor-pointer border flex flex-col justify-between space-y-1 relative ${
+                      className={`p-3 rounded-xl text-left transition cursor-pointer border flex flex-col justify-between space-y-1 relative shadow-sm ${
                         isSelected
-                          ? "bg-white text-black border-white shadow-lg font-bold"
+                          ? "bg-slate-900 text-white border-slate-900 shadow-md font-bold"
                           : isConnected
-                          ? "bg-zinc-900 text-zinc-200 border-zinc-700 hover:border-zinc-500"
-                          : "bg-zinc-950 text-zinc-400 border-zinc-800/90 hover:border-zinc-700 hover:text-white"
+                          ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:border-emerald-400"
+                          : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:text-slate-900"
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
@@ -92,30 +92,30 @@ export function SpatialToolbox({
                           {item.iconTag || item.id}
                         </span>
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`w-2 h-2 rounded-full ${
                             isConnected
-                              ? "bg-zinc-400"
+                              ? "bg-emerald-500"
                               : isSelected
-                              ? "bg-black"
-                              : "bg-zinc-700"
+                              ? "bg-sky-400"
+                              : "bg-slate-400"
                           }`}
                         ></span>
                       </div>
 
-                      <span className="text-xs tracking-tight truncate w-full font-medium">
+                      <span className="text-xs tracking-tight truncate w-full font-semibold">
                         {item.name}
                       </span>
 
                       <span
                         className={`text-[9px] font-mono ${
                           isSelected
-                            ? "text-zinc-700"
+                            ? "text-slate-300"
                             : isConnected
-                            ? "text-zinc-300"
-                            : "text-zinc-500"
+                            ? "text-emerald-700 font-bold"
+                            : "text-slate-500"
                         }`}
                       >
-                        {isConnected ? "CONNECTED" : "IN TOOLBOX"}
+                        {isConnected ? "CONNECTED ✓" : "IN TOOLBOX"}
                       </span>
                     </button>
                   );
@@ -124,16 +124,16 @@ export function SpatialToolbox({
 
               {/* Selected Part Inspector Bar */}
               {selectedItem && (
-                <div className="pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-zinc-950/90 p-3 rounded-xl border border-zinc-800/60">
-                  <div className="space-y-0.5 max-w-xl">
+                <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                  <div className="space-y-1 max-w-xl">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-white tracking-wide">{selectedItem.name}</span>
+                      <span className="font-bold text-slate-900 tracking-wide text-sm">{selectedItem.name}</span>
                       {selectedItem.concepts && (
                         <div className="flex gap-1">
                           {selectedItem.concepts.slice(0, 2).map((c) => (
                             <span
                               key={c}
-                              className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800"
+                              className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-medium"
                             >
                               #{c}
                             </span>
@@ -141,7 +141,7 @@ export function SpatialToolbox({
                         </div>
                       )}
                     </div>
-                    <p className="text-[11px] text-zinc-400 font-light leading-relaxed line-clamp-1">
+                    <p className="text-[12px] text-slate-600 font-normal leading-relaxed line-clamp-1">
                       {selectedItem.description}
                     </p>
                   </div>
@@ -149,7 +149,7 @@ export function SpatialToolbox({
                   {onActionItem && (
                     <button
                       onClick={() => onActionItem(selectedItem.id)}
-                      className="px-5 py-2 rounded-xl bg-white text-black font-mono text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition cursor-pointer whitespace-nowrap self-end sm:self-auto shadow-md"
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer whitespace-nowrap self-end sm:self-auto shadow-md"
                     >
                       {actionLabel}
                     </button>
