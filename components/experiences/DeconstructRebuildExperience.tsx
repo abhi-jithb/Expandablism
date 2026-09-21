@@ -128,7 +128,7 @@ export function DeconstructRebuildExperience({
   );
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#070709] text-slate-100 font-sans select-none">
+    <main className="relative w-screen h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans select-none">
       {/* 3D Viewport Hero Stage (Full Screen Background) */}
       <div className="absolute inset-0 w-full h-full z-0">
         <DynamicViewer
@@ -159,10 +159,10 @@ export function DeconstructRebuildExperience({
       {/* Minimal Header Chrome */}
       <header className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 py-6 flex items-center justify-between pointer-events-none">
         <div className="flex items-center space-x-3 pointer-events-auto">
-          <Link href="/" className="text-sm font-semibold tracking-tight text-white hover:opacity-80 transition">
+          <Link href="/" className="text-sm font-bold tracking-tight text-slate-900 hover:text-sky-600 transition">
             Expandablism
           </Link>
-          <span className="hidden sm:inline-block text-xs font-light text-slate-500 border-l border-slate-800 pl-3">
+          <span className="hidden sm:inline-block text-xs font-mono text-slate-500 border-l border-slate-300 pl-3">
             Explore. Understand. Rebuild.
           </span>
         </div>
@@ -171,21 +171,21 @@ export function DeconstructRebuildExperience({
         <div className="flex items-center space-x-4 pointer-events-auto">
           {mode === "explore" && (
             <>
-              <span className="text-[11px] font-mono text-slate-400 bg-slate-900 px-3.5 py-1.5 rounded-full border border-slate-800">
-                Explored &middot; <span className="text-white font-bold">{exploredComponentIds.size}</span> / 9
+              <span className="text-[11px] font-mono text-slate-700 bg-white/90 px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-sm font-bold">
+                Explored &middot; <span className="text-sky-600 font-bold">{exploredComponentIds.size}</span> / 9
               </span>
 
               {exploredComponentIds.has("engine") ? (
                 <button
                   onClick={handleEnterRebuild}
-                  className="px-4 py-1.5 rounded-full bg-white text-slate-950 text-xs font-medium uppercase tracking-wider hover:bg-slate-100 transition cursor-pointer active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-mono font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer active:scale-95 shadow-md"
                 >
                   Start Rebuild
                 </button>
               ) : (
                 <button
                   onClick={handleReassembleOverview}
-                  className="px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-white transition flex items-center space-x-2 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono text-slate-700 hover:text-slate-900 transition flex items-center space-x-2 cursor-pointer font-bold shadow-sm"
                 >
                   <span>↺</span>
                   <span>Reassemble</span>
@@ -195,8 +195,8 @@ export function DeconstructRebuildExperience({
           )}
 
           {mode === "rebuild" && (
-            <span className="text-[11px] font-mono text-slate-300 bg-slate-900 px-4 py-1.5 rounded-full border border-slate-800">
-              REBUILD &middot; <span className="text-white font-bold">{assembledComponentIds.size}</span> / {REBUILD_REQUIRED_COMPONENTS.length} assembled
+            <span className="text-[11px] font-mono text-slate-700 bg-white/90 px-4 py-2 rounded-xl border border-slate-200 shadow-sm font-bold">
+              REBUILD &middot; <span className="text-emerald-600 font-bold">{assembledComponentIds.size}</span> / {REBUILD_REQUIRED_COMPONENTS.length} assembled
             </span>
           )}
         </div>
@@ -205,7 +205,7 @@ export function DeconstructRebuildExperience({
       {/* Toast Feedback Banner */}
       {lastNotification && (
         <div className="absolute top-20 inset-x-0 z-30 flex justify-center pointer-events-none animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 px-5 py-2.5 rounded-full text-xs font-mono text-white">
+          <div className="bg-slate-900 border border-slate-800 px-5 py-2.5 rounded-full text-xs font-mono text-white shadow-lg font-medium">
             {lastNotification}
           </div>
         </div>
@@ -214,22 +214,22 @@ export function DeconstructRebuildExperience({
       {/* MODE: INTRO — Initial Presentation Overlay */}
       {mode === "intro" && (
         <div className="absolute inset-x-0 bottom-14 z-10 flex flex-col items-center text-center px-6 pointer-events-none transition-all duration-500">
-          <div className="pointer-events-auto flex flex-col items-center max-w-md space-y-3">
-            <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-slate-500">
+          <div className="pointer-events-auto flex flex-col items-center max-w-md space-y-3 bg-white/80 p-8 rounded-3xl border border-slate-200 backdrop-blur-md shadow-xl">
+            <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-sky-800 font-bold">
               {area.toUpperCase()} / {topicData.name.toUpperCase()}
             </span>
 
-            <h1 className="text-3xl sm:text-5xl font-light tracking-tight text-white">
+            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900">
               {explorableObject?.name || topicData.name}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-400 font-light max-w-xs leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 font-normal max-w-xs leading-relaxed">
               Understand the machine, one component at a time.
             </p>
 
             <button
               onClick={handleStartExploring}
-              className="mt-3 px-8 py-3 rounded-full bg-white text-slate-950 font-medium text-xs tracking-wider uppercase transition-all duration-300 hover:scale-105 hover:bg-slate-100 active:scale-95 cursor-pointer"
+              className="mt-3 px-8 py-3 rounded-full bg-slate-900 text-white font-bold text-xs tracking-wider uppercase transition-all duration-300 hover:scale-105 hover:bg-slate-800 active:scale-95 cursor-pointer shadow-md"
             >
               Start Exploring
             </button>
@@ -263,28 +263,32 @@ export function DeconstructRebuildExperience({
 
       {/* MODE: COMPLETE — Mastery Result Modal */}
       {mode === "complete" && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-slate-950/80 animate-fadeIn">
-          <div className="bg-[#09090b] border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+        <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-3xl font-bold border border-emerald-300">
+              🏆
+            </div>
+
             <div>
-              <span className="text-[10px] font-mono tracking-[0.3em] text-slate-400 uppercase block mb-1">
-                MASTERY COMPLETE
+              <span className="text-[10px] font-mono tracking-[0.3em] text-emerald-700 font-bold uppercase block mb-1">
+                REBUILD MASTERY COMPLETE
               </span>
-              <h2 className="text-3xl font-light text-white tracking-tight">
-                MOTORCYCLE REBUILT
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
+                MOTORCYCLE REBUILT!
               </h2>
-              <p className="text-xs text-slate-400 font-light mt-2">
+              <p className="text-xs text-slate-600 font-normal mt-2">
                 You explored it. You understood it. You rebuilt it.
               </p>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-left space-y-2 text-xs font-mono text-slate-300">
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-500">Components Understood</span>
-                <span className="text-white font-bold">8 / 8</span>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs font-mono text-slate-800">
+              <div className="flex justify-between border-b border-slate-200 pb-2">
+                <span className="text-slate-500 font-semibold">Components Understood</span>
+                <span className="text-slate-900 font-bold">8 / 8</span>
               </div>
               <div className="flex justify-between pt-1">
-                <span className="text-slate-500">3D Reconstruction</span>
-                <span className="text-white font-bold">Complete</span>
+                <span className="text-slate-500 font-semibold">3D Reconstruction</span>
+                <span className="text-emerald-600 font-bold">Complete ✓</span>
               </div>
             </div>
 
@@ -295,14 +299,14 @@ export function DeconstructRebuildExperience({
                   setSelectedComponentId(null);
                   setAssembledComponentIds(new Set());
                 }}
-                className="w-full py-3 bg-white hover:bg-slate-100 text-slate-950 font-semibold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
+                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs tracking-wider uppercase rounded-full transition shadow-md cursor-pointer active:scale-95"
               >
                 Explore Again
               </button>
 
               <Link
                 href="/"
-                className="block w-full py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-medium text-xs tracking-wider uppercase rounded-full transition border border-slate-800 text-center"
+                className="block w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-mono text-xs tracking-wider uppercase rounded-full transition border border-slate-300 text-center font-bold"
               >
                 Discover Something Else
               </Link>
@@ -317,7 +321,7 @@ export function DeconstructRebuildExperience({
           hasInteracted || mode !== "intro" ? "opacity-0" : "opacity-60"
         }`}
       >
-        <span className="text-[11px] font-mono text-slate-400 tracking-widest uppercase">
+        <span className="text-[11px] font-mono text-slate-500 tracking-widest uppercase font-semibold">
           <span className="hidden sm:inline">Drag to rotate &middot; Scroll to zoom</span>
           <span className="sm:hidden">Swipe to rotate &middot; Pinch to zoom</span>
         </span>

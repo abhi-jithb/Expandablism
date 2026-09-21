@@ -42,7 +42,7 @@ export function CircuitExperimentExperience({
   );
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#050505] text-slate-100 font-sans select-none">
+    <main className="relative w-screen h-screen overflow-hidden bg-slate-50 text-slate-900 font-sans select-none">
       {/* Full Viewport 3D Circuit Canvas */}
       <div className="absolute inset-0 w-full h-full z-0">
         <CircuitCanvas3D
@@ -60,19 +60,19 @@ export function CircuitExperimentExperience({
       {/* Header Navigation Chrome */}
       <header className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 py-6 flex items-center justify-between pointer-events-none">
         <div className="flex items-center space-x-3 pointer-events-auto">
-          <Link href="/" className="text-sm font-semibold tracking-tight text-white hover:opacity-80 transition">
+          <Link href="/" className="text-sm font-bold tracking-tight text-slate-900 hover:text-sky-600 transition">
             Expandablism
           </Link>
-          <span className="hidden sm:inline-block text-xs font-light text-slate-500 border-l border-slate-800 pl-3">
+          <span className="hidden sm:inline-block text-xs font-mono text-slate-500 border-l border-slate-300 pl-3">
             Experiment. Observe. Understand.
           </span>
         </div>
 
         {/* Live Formula Badge */}
         <div className="pointer-events-auto flex items-center space-x-4">
-          <div className="px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300 backdrop-blur-md">
+          <div className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono text-slate-700 shadow-sm backdrop-blur-md">
             <span>Ohm&apos;s Law: </span>
-            <span className="text-sky-400 font-bold">V</span> = <span className="text-emerald-400 font-bold">I</span> &times; <span className="text-amber-400 font-bold">R</span>
+            <span className="text-sky-600 font-bold">V</span> = <span className="text-emerald-600 font-bold">I</span> &times; <span className="text-amber-600 font-bold">R</span>
           </div>
         </div>
       </header>
@@ -80,7 +80,7 @@ export function CircuitExperimentExperience({
       {/* Overheat Safety Warning Toast */}
       {isOverheated && isSwitchClosed && (
         <div className="absolute top-20 inset-x-0 z-30 flex justify-center pointer-events-none animate-bounce">
-          <div className="bg-rose-950/90 border border-rose-800 px-5 py-2.5 rounded-full text-xs font-mono text-rose-200 shadow-xl backdrop-blur-md">
+          <div className="bg-rose-50 border border-rose-300 px-5 py-2.5 rounded-full text-xs font-mono text-rose-800 shadow-lg backdrop-blur-md font-semibold">
             ⚠️ High Current Alert! Filament temperature exceeding thermal limit ({current.toFixed(2)}A &gt; {config.maxCurrentThreshold}A)
           </div>
         </div>
@@ -89,24 +89,24 @@ export function CircuitExperimentExperience({
       {/* Selected Component Knowledge Card (Object-First Anchor) */}
       {selectedComponent && (
         <div className="absolute top-20 right-6 sm:right-10 z-20 max-w-xs w-full pointer-events-auto">
-          <div className="bg-[#09090b]/90 border border-slate-800 rounded-2xl p-5 shadow-2xl backdrop-blur-lg space-y-3">
+          <div className="bg-white/95 border border-slate-200 rounded-2xl p-5 shadow-xl backdrop-blur-lg space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase">
+              <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase font-bold">
                 SELECTED COMPONENT
               </span>
               <button
                 onClick={() => setSelectedComponentId(null)}
-                className="text-slate-500 hover:text-white text-xs cursor-pointer"
+                className="text-slate-400 hover:text-slate-900 text-xs cursor-pointer font-bold"
               >
                 ✕
               </button>
             </div>
 
             <div>
-              <h3 className="text-base font-semibold text-white tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 tracking-tight">
                 {selectedComponent.name}
               </h3>
-              <p className="text-xs text-slate-400 font-light mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 font-normal mt-1 leading-relaxed">
                 {selectedComponent.description}
               </p>
             </div>
@@ -116,7 +116,7 @@ export function CircuitExperimentExperience({
                 {selectedComponent.concepts.map((concept) => (
                   <span
                     key={concept}
-                    className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-300"
+                    className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-mono text-slate-700 font-medium"
                   >
                     #{concept}
                   </span>
@@ -129,29 +129,29 @@ export function CircuitExperimentExperience({
 
       {/* Bottom Experiment Control Deck */}
       <div className="absolute bottom-8 inset-x-0 z-20 flex flex-col items-center pointer-events-none px-6">
-        <div className="bg-[#09090b]/90 border border-slate-800 rounded-2xl p-6 max-w-2xl w-full shadow-2xl pointer-events-auto space-y-6 backdrop-blur-xl">
+        <div className="bg-white/95 border border-slate-200 rounded-2xl p-6 max-w-2xl w-full shadow-2xl pointer-events-auto space-y-6 backdrop-blur-xl">
           {/* Top Measurement Meters */}
-          <div className="grid grid-cols-4 gap-3 text-center border-b border-slate-800 pb-4 font-mono">
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">VOLTAGE (V)</span>
-              <span className="text-lg font-bold text-sky-400">{voltage}V</span>
+          <div className="grid grid-cols-4 gap-3 text-center border-b border-slate-200 pb-4 font-mono">
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">VOLTAGE (V)</span>
+              <span className="text-lg font-bold text-sky-600">{voltage}V</span>
             </div>
 
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">RESISTANCE (R)</span>
-              <span className="text-lg font-bold text-amber-400">{resistance}Ω</span>
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">RESISTANCE (R)</span>
+              <span className="text-lg font-bold text-amber-600">{resistance}Ω</span>
             </div>
 
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">CURRENT (I)</span>
-              <span className={`text-lg font-bold ${isOverheated ? "text-rose-400" : "text-emerald-400"}`}>
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">CURRENT (I)</span>
+              <span className={`text-lg font-bold ${isOverheated ? "text-rose-600" : "text-emerald-600"}`}>
                 {current.toFixed(2)}A
               </span>
             </div>
 
-            <div className="bg-slate-900/60 rounded-xl p-2.5 border border-slate-800/80">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">POWER (P)</span>
-              <span className="text-lg font-bold text-purple-400">{power.toFixed(1)}W</span>
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">POWER (P)</span>
+              <span className="text-lg font-bold text-purple-600">{power.toFixed(1)}W</span>
             </div>
           </div>
 
@@ -160,8 +160,8 @@ export function CircuitExperimentExperience({
             {/* 1. Voltage Slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">Potential (V)</span>
-                <span className="text-sky-400 font-bold">{voltage} Volts</span>
+                <span className="text-slate-600 font-semibold">Potential (V)</span>
+                <span className="text-sky-600 font-bold">{voltage} Volts</span>
               </div>
               <input
                 type="range"
@@ -169,19 +169,19 @@ export function CircuitExperimentExperience({
                 max={config.maxVoltage}
                 value={voltage}
                 onChange={(e) => setVoltage(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
               />
             </div>
 
             {/* 2. Switch Toggle Button */}
             <div className="flex flex-col items-center justify-center space-y-1">
-              <span className="text-[10px] font-mono text-slate-400 uppercase">Circuit Switch</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Circuit Switch</span>
               <button
                 onClick={() => setIsSwitchClosed(!isSwitchClosed)}
                 className={`w-full py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider transition cursor-pointer font-bold border ${
                   isSwitchClosed
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 hover:bg-emerald-500/30"
-                    : "bg-rose-500/20 text-rose-300 border-rose-500/50 hover:bg-rose-500/30"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                    : "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200"
                 }`}
               >
                 {isSwitchClosed ? "● Circuit Closed (ON)" : "○ Circuit Open (OFF)"}
@@ -191,8 +191,8 @@ export function CircuitExperimentExperience({
             {/* 3. Resistance Slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">Restriction (R)</span>
-                <span className="text-amber-400 font-bold">{resistance} Ohms</span>
+                <span className="text-slate-600 font-semibold">Restriction (R)</span>
+                <span className="text-amber-600 font-bold">{resistance} Ohms</span>
               </div>
               <input
                 type="range"
@@ -200,7 +200,7 @@ export function CircuitExperimentExperience({
                 max={config.maxResistance}
                 value={resistance}
                 onChange={(e) => setResistance(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
               />
             </div>
           </div>
@@ -224,13 +224,13 @@ export function CircuitExperimentExperience({
 
           {/* Discover Related Knowledge Connections */}
           {topicData.knowledgeConnections && (
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] font-mono text-slate-500">
               <span>Related Concepts:</span>
               <div className="flex space-x-2">
                 {topicData.knowledgeConnections.map((concept) => (
                   <span
                     key={concept}
-                    className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 transition"
+                    className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 hover:border-slate-400 transition"
                   >
                     → {concept}
                   </span>

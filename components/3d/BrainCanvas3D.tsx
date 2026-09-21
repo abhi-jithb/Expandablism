@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
-import { BrainRegionInfo, BrainStateConfig } from "@/data/brainLearningContent";
+import { BrainRegionInfo, BrainStateConfig, SynapticPuzzleNode } from "@/data/brainLearningContent";
 
 interface BrainCanvas3DProps {
   brainRegions: BrainRegionInfo[];
@@ -13,7 +13,7 @@ interface BrainCanvas3DProps {
   activeState: BrainStateConfig;
   isPuzzleMode?: boolean;
   puzzleConnections?: { from: string; to: string }[];
-  puzzleNodes?: { id: string; label: string; position: [number, number, number] }[];
+  puzzleNodes?: SynapticPuzzleNode[];
   selectedPuzzleNodeId?: string | null;
   onSelectRegion: (id: string | null) => void;
   onHoverRegion: (id: string | null) => void;
