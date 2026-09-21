@@ -137,41 +137,41 @@ export function MotorcycleCanvas({
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden select-none touch-none bg-[#070709]">
+    <div className="absolute inset-0 w-full h-full overflow-hidden select-none touch-none bg-slate-100">
       <Canvas
         camera={{ position: initialCameraPosition, fov: 42 }}
-        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         dpr={[1, 2]}
         className="w-full h-full"
       >
-        <color attach="background" args={["#070709"]} />
+        <color attach="background" args={["#f1f5f9"]} />
 
-        {/* Studio Lighting Setup for Minimal Museum Presentation */}
-        <ambientLight intensity={0.7} />
+        {/* Studio Lighting Setup for Minimal Presentation */}
+        <ambientLight intensity={1.1} />
         
         {/* Main Key Light */}
         <directionalLight
           position={[5, 7, 4]}
-          intensity={1.6}
+          intensity={1.8}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
 
         {/* Soft Cool Fill Light */}
-        <directionalLight position={[-5, 3, -3]} intensity={0.7} color="#94a3b8" />
+        <directionalLight position={[-5, 3, -3]} intensity={0.8} color="#cbd5e1" />
 
         {/* Warm Back/Rim Highlight */}
-        <pointLight position={[0, 4.5, -4]} intensity={1.2} color="#f8fafc" />
+        <pointLight position={[0, 4.5, -4]} intensity={1.5} color="#ffffff" />
 
         {/* Realistic Floor Contact Shadow */}
         <ContactShadows
           position={[0, -0.82, 0]}
-          opacity={isExploded || isRebuildMode ? 0.45 : 0.65}
+          opacity={isExploded || isRebuildMode ? 0.35 : 0.5}
           scale={14}
           blur={2.5}
           far={4}
-          color="#000000"
+          color="#0f172a"
         />
 
         {/* 3D Motorcycle Geometry & Spatial Annotations */}

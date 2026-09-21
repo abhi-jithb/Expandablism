@@ -76,12 +76,16 @@ function NeuralPulseParticles({ activeState }: { activeState: BrainStateConfig }
 
   return (
     <group ref={groupRef}>
-      {Array.from({ length: particleCount }).map((_, i) => (
-        <mesh key={i}>
-          <sphereGeometry args={[0.045, 12, 12]} />
-          <meshBasicMaterial color="#ffffff" />
-        </mesh>
-      ))}
+      {Array.from({ length: particleCount }).map((_, i) => {
+        const colors = ["#0284c7", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
+        const particleColor = colors[i % colors.length];
+        return (
+          <mesh key={i}>
+            <sphereGeometry args={[0.05, 12, 12]} />
+            <meshBasicMaterial color={particleColor} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
@@ -102,11 +106,11 @@ function BrainSilhouette() {
       <mesh position={[-0.45, 0.2, 0.1]}>
         <sphereGeometry args={[1.05, 24, 24]} />
         <meshStandardMaterial
-          color="#3f3f46"
+          color="#6366f1"
           wireframe
           transparent
-          opacity={0.2}
-          roughness={0.8}
+          opacity={0.18}
+          roughness={0.6}
         />
       </mesh>
 
@@ -114,11 +118,11 @@ function BrainSilhouette() {
       <mesh position={[0.45, 0.2, 0.1]}>
         <sphereGeometry args={[1.05, 24, 24]} />
         <meshStandardMaterial
-          color="#3f3f46"
+          color="#6366f1"
           wireframe
           transparent
-          opacity={0.2}
-          roughness={0.8}
+          opacity={0.18}
+          roughness={0.6}
         />
       </mesh>
 
@@ -126,10 +130,10 @@ function BrainSilhouette() {
       <mesh position={[0, -0.4, -0.6]}>
         <sphereGeometry args={[0.55, 18, 18]} />
         <meshStandardMaterial
-          color="#27272a"
+          color="#8b5cf6"
           wireframe
           transparent
-          opacity={0.25}
+          opacity={0.22}
         />
       </mesh>
 
@@ -137,9 +141,9 @@ function BrainSilhouette() {
       <mesh position={[0, -0.8, -0.3]} rotation={[0.2, 0, 0]}>
         <cylinderGeometry args={[0.25, 0.2, 0.8, 16]} />
         <meshStandardMaterial
-          color="#18181b"
+          color="#a855f7"
           transparent
-          opacity={0.4}
+          opacity={0.25}
         />
       </mesh>
 
@@ -152,10 +156,10 @@ function BrainSilhouette() {
           [0, 0.6, -0.2],
           [0, 0.4, 0.9],
         ]}
-        color="#71717a"
+        color="#818cf8"
         lineWidth={1.5}
         transparent
-        opacity={0.4}
+        opacity={0.5}
       />
     </group>
   );
@@ -179,10 +183,12 @@ function RegionNodeMesh({
 
   useFrame((state) => {
     if (meshRef.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 2 + region.position[0]) * 0.05;
-      meshRef.current.scale.setScalar(1 + pulse + (isSelected ? 0.2 : isHovered ? 0.1 : 0));
+      const pulse = Math.sin(state.clock.elapsedTime * 2.5 + region.position[0]) * 0.06;
+      meshRef.current.scale.setScalar(1 + pulse + (isSelected ? 0.25 : isHovered ? 0.12 : 0));
     }
   });
+
+  const baseColor = region.color || "#38bdf8";
 
   return (
     <group position={region.position}>
@@ -200,20 +206,20 @@ function RegionNodeMesh({
       >
         <sphereGeometry args={[0.22, 24, 24]} />
         <meshStandardMaterial
-          color={isSelected ? "#ffffff" : isHovered ? "#d4d4d8" : "#71717a"}
-          emissive={isSelected ? "#ffffff" : isHovered ? "#a1a1aa" : "#3f3f46"}
-          emissiveIntensity={isSelected ? 0.9 : isHovered ? 0.6 : 0.3}
+          color={baseColor}
+          emissive={baseColor}
+          emissiveIntensity={isSelected ? 0.9 : isHovered ? 0.7 : 0.4}
           roughness={0.2}
-          metalness={0.5}
+          metalness={0.3}
         />
       </mesh>
 
       <mesh>
-        <sphereGeometry args={[0.32, 16, 16]} />
+        <sphereGeometry args={[0.34, 16, 16]} />
         <meshBasicMaterial
-          color="#ffffff"
+          color={baseColor}
           transparent
-          opacity={isSelected ? 0.35 : isHovered ? 0.2 : 0.08}
+          opacity={isSelected ? 0.45 : isHovered ? 0.3 : 0.12}
           wireframe
         />
       </mesh>
@@ -221,15 +227,18 @@ function RegionNodeMesh({
       <Html position={[0, 0.38, 0]} center distanceFactor={7}>
         <button
           onClick={onSelect}
-          className={`px-3 py-1 rounded-md text-[11px] font-mono whitespace-nowrap transition-all border shadow-lg cursor-pointer ${
+          className={`px-3 py-1 rounded-md text-[11px] font-mono whitespace-nowrap transition-all border shadow-md cursor-pointer ${
             isSelected
-              ? "bg-white text-black font-bold border-white scale-110"
+              ? "bg-slate-900 text-white font-bold border-slate-900 scale-110 shadow-lg"
               : isHovered
-              ? "bg-zinc-900 text-white border-zinc-600 scale-105"
-              : "bg-black/90 text-zinc-300 border-zinc-800 hover:border-zinc-600"
+              ? "bg-white text-slate-900 border-slate-400 scale-105"
+              : "bg-white/95 text-slate-700 border-slate-200 hover:border-slate-400"
           }`}
         >
-          <span className={`w-1.5 h-1.5 rounded-full inline-block mr-1.5 ${isSelected ? "bg-black" : "bg-white"}`}></span>
+          <span
+            className="w-2 h-2 rounded-full inline-block mr-1.5"
+            style={{ backgroundColor: baseColor }}
+          ></span>
           {region.name}
         </button>
       </Html>
@@ -254,16 +263,16 @@ export function BrainCanvas3D({
     <div className="w-full h-full relative">
       <Canvas
         camera={{ position: [0, 2.5, 4.5], fov: 45 }}
-        gl={{ antialias: true, alpha: false }}
-        style={{ background: "#000000" }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "#f8fafc" }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 8, 5]} intensity={1.5} color="#ffffff" />
-        <directionalLight position={[-5, -4, -5]} intensity={0.5} color="#a1a1aa" />
-        <pointLight position={[0, 0, 0]} intensity={2.0} color="#ffffff" distance={6} />
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[5, 8, 5]} intensity={1.4} color="#ffffff" />
+        <directionalLight position={[-5, -4, -5]} intensity={0.6} color="#93c5fd" />
+        <pointLight position={[0, 0, 0]} intensity={1.5} color="#38bdf8" distance={6} />
 
-        {/* Studio Grid Floor */}
-        <gridHelper args={[20, 20, "#27272a", "#09090b"]} position={[0, -1.2, 0]} />
+        {/* Studio Light Grid Floor */}
+        <gridHelper args={[20, 20, "#cbd5e1", "#e2e8f0"]} position={[0, -1.2, 0]} />
 
         {/* 3D Brain Silhouette */}
         <BrainSilhouette />
@@ -296,8 +305,8 @@ export function BrainCanvas3D({
                 <Line
                   key={`puzzle-line-${idx}`}
                   points={[fromNode.position, toNode.position]}
-                  color="#ffffff"
-                  lineWidth={3}
+                  color="#0284c7"
+                  lineWidth={4}
                 />
               );
             })}
@@ -307,6 +316,8 @@ export function BrainCanvas3D({
               const isConnected = puzzleConnections.some(
                 (c) => c.from === node.id || c.to === node.id
               );
+              const region = brainRegions.find((r) => r.id === node.regionId);
+              const nodeColor = region?.color || "#38bdf8";
 
               return (
                 <group key={node.id} position={node.position}>
@@ -318,21 +329,21 @@ export function BrainCanvas3D({
                   >
                     <sphereGeometry args={[0.24, 24, 24]} />
                     <meshStandardMaterial
-                      color={isSelected ? "#ffffff" : isConnected ? "#a1a1aa" : "#3f3f46"}
-                      emissive={isSelected ? "#ffffff" : isConnected ? "#a1a1aa" : "#27272a"}
-                      emissiveIntensity={0.6}
+                      color={isSelected ? "#ffffff" : nodeColor}
+                      emissive={isSelected ? nodeColor : nodeColor}
+                      emissiveIntensity={isSelected ? 1.0 : isConnected ? 0.7 : 0.4}
                     />
                   </mesh>
 
                   <Html position={[0, 0.4, 0]} center distanceFactor={7}>
                     <button
                       onClick={() => onSelectPuzzleNode && onSelectPuzzleNode(node.id)}
-                      className={`px-3 py-1 rounded-md text-[11px] font-mono whitespace-nowrap border cursor-pointer ${
+                      className={`px-3 py-1 rounded-md text-[11px] font-mono whitespace-nowrap border cursor-pointer shadow-sm ${
                         isSelected
-                          ? "bg-white text-black font-bold border-white scale-110"
+                          ? "bg-slate-900 text-white font-bold border-slate-900 scale-110 shadow-md"
                           : isConnected
-                          ? "bg-zinc-900 text-zinc-200 border-zinc-600"
-                          : "bg-black/90 text-zinc-400 border-zinc-800 hover:border-zinc-500 hover:text-white"
+                          ? "bg-sky-600 text-white border-sky-500 font-medium"
+                          : "bg-white text-slate-700 border-slate-300 hover:border-slate-500 hover:text-slate-900"
                       }`}
                     >
                       {node.label}

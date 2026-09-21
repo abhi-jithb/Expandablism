@@ -93,11 +93,11 @@ export function CircuitCanvas3D({
     <div className="w-full h-full relative">
       <Canvas
         camera={{ position: [0, 4.5, 5.5], fov: 45 }}
-        gl={{ antialias: true, alpha: false }}
-        style={{ background: "#050505" }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "#f8fafc" }}
       >
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[5, 8, 5]} intensity={1.2} />
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[5, 8, 5]} intensity={1.5} />
         <pointLight
           position={[2.2, 0.8, 0]}
           intensity={isSwitchClosed ? normalizedPower * 5 : 0}
@@ -106,7 +106,7 @@ export function CircuitCanvas3D({
         />
 
         {/* Studio Floor Grid */}
-        <gridHelper args={[20, 20, "#1f2937", "#0d1117"]} position={[0, -0.01, 0]} />
+        <gridHelper args={[20, 20, "#cbd5e1", "#e2e8f0"]} position={[0, -0.01, 0]} />
 
         {/* 1. BATTERY MODULE (Left) */}
         <group
@@ -138,14 +138,14 @@ export function CircuitCanvas3D({
           {/* Spatial Anchor Label */}
           <Html position={[0, 0.9, 0]} center distanceFactor={8}>
             <div
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border shadow-md ${
                 selectedComponent === "battery"
-                  ? "bg-white text-black font-bold border-white"
-                  : "bg-slate-900/90 text-slate-200 border-slate-800"
+                  ? "bg-slate-900 text-white font-bold border-slate-900"
+                  : "bg-white/95 text-slate-800 border-slate-300"
               }`}
             >
               <span>Battery: </span>
-              <span className="font-bold text-sky-400">{voltage}V</span>
+              <span className="font-bold text-sky-600">{voltage}V</span>
             </div>
           </Html>
         </group>
@@ -161,7 +161,7 @@ export function CircuitCanvas3D({
           {/* Switch Base */}
           <mesh position={[0, -0.1, 0]}>
             <boxGeometry args={[1.2, 0.15, 0.5]} />
-            <meshStandardMaterial color="#0f172a" />
+            <meshStandardMaterial color="#334155" />
           </mesh>
 
           {/* Switch Contacts */}
@@ -188,14 +188,14 @@ export function CircuitCanvas3D({
           {/* Spatial Anchor Label */}
           <Html position={[0, 0.7, 0]} center distanceFactor={8}>
             <div
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border shadow-md ${
                 selectedComponent === "switch"
-                  ? "bg-white text-black font-bold border-white"
-                  : "bg-slate-900/90 text-slate-200 border-slate-800"
+                  ? "bg-slate-900 text-white font-bold border-slate-900"
+                  : "bg-white/95 text-slate-800 border-slate-300"
               }`}
             >
               <span>Switch: </span>
-              <span className={isSwitchClosed ? "text-emerald-400 font-bold" : "text-rose-400"}>
+              <span className={isSwitchClosed ? "text-emerald-600 font-bold" : "text-rose-600"}>
                 {isSwitchClosed ? "CLOSED (ON)" : "OPEN (OFF)"}
               </span>
             </div>
@@ -214,7 +214,7 @@ export function CircuitCanvas3D({
           <mesh rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.25, 0.25, 1.0, 16]} />
             <meshStandardMaterial
-              color={selectedComponent === "resistor" ? "#e0f2fe" : "#334155"}
+              color={selectedComponent === "resistor" ? "#bae6fd" : "#475569"}
               roughness={0.4}
             />
           </mesh>
@@ -230,14 +230,14 @@ export function CircuitCanvas3D({
           {/* Spatial Anchor Label */}
           <Html position={[0, 0.7, 0]} center distanceFactor={8}>
             <div
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border shadow-md ${
                 selectedComponent === "resistor"
-                  ? "bg-white text-black font-bold border-white"
-                  : "bg-slate-900/90 text-slate-200 border-slate-800"
+                  ? "bg-slate-900 text-white font-bold border-slate-900"
+                  : "bg-white/95 text-slate-800 border-slate-300"
               }`}
             >
               <span>Resistor: </span>
-              <span className="font-bold text-amber-400">{resistance}Ω</span>
+              <span className="font-bold text-amber-600">{resistance}Ω</span>
             </div>
           </Html>
         </group>
@@ -253,7 +253,7 @@ export function CircuitCanvas3D({
           {/* Socket Base */}
           <mesh position={[0, -0.2, 0]}>
             <cylinderGeometry args={[0.35, 0.4, 0.3, 16]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.8} />
+            <meshStandardMaterial color="#334155" metalness={0.8} />
           </mesh>
 
           {/* Glass Outer Shell */}
@@ -286,14 +286,14 @@ export function CircuitCanvas3D({
           {/* Spatial Anchor Label */}
           <Html position={[0, 1.0, 0]} center distanceFactor={8}>
             <div
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all border shadow-md ${
                 selectedComponent === "bulb"
-                  ? "bg-white text-black font-bold border-white"
-                  : "bg-slate-900/90 text-slate-200 border-slate-800"
+                  ? "bg-slate-900 text-white font-bold border-slate-900"
+                  : "bg-white/95 text-slate-800 border-slate-300"
               }`}
             >
               <span>Bulb Power: </span>
-              <span className="font-bold text-emerald-400">
+              <span className="font-bold text-emerald-600">
                 {isSwitchClosed ? power.toFixed(1) : "0.0"}W
               </span>
             </div>

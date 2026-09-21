@@ -48,28 +48,28 @@ export function ComputerCanvas3D({
     <div className="w-full h-full relative">
       <Canvas
         camera={{ position: [0, 5.5, 6.5], fov: 45 }}
-        gl={{ antialias: true, alpha: false }}
-        style={{ background: "#050505" }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "#f8fafc" }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[6, 10, 6]} intensity={1.3} />
+        <ambientLight intensity={0.9} />
+        <directionalLight position={[6, 10, 6]} intensity={1.5} />
         <pointLight
           position={[0, 3, 0]}
-          intensity={isPoweredOn ? 3.5 : 0}
-          color="#38bdf8"
+          intensity={isPoweredOn ? 4.5 : 0}
+          color="#0284c7"
           distance={10}
         />
 
         {/* Studio Floor Grid */}
-        <gridHelper args={[20, 20, "#1f2937", "#0d1117"]} position={[0, -0.01, 0]} />
+        <gridHelper args={[20, 20, "#cbd5e1", "#e2e8f0"]} position={[0, -0.01, 0]} />
 
         {/* MOTHERBOARD MAIN PCB BASE */}
         <group position={[0, 0.1, 0]}>
-          {/* Main PCB Board */}
+          {/* Main PCB Board - Sapphire / Emerald Vibrant PCB */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[3.2, 0.1, 2.8]} />
             <meshStandardMaterial
-              color={selectedComponentId === "motherboard" ? "#1e293b" : "#0b1329"}
+              color={selectedComponentId === "motherboard" ? "#0284c7" : "#0369a1"}
               roughness={0.3}
               metalness={0.5}
             />
@@ -78,7 +78,7 @@ export function ComputerCanvas3D({
           {/* Gold Trace Accents */}
           <mesh position={[0, 0.055, 0]}>
             <boxGeometry args={[3.0, 0.001, 2.6]} />
-            <meshStandardMaterial color="#1e3a8a" roughness={0.8} />
+            <meshStandardMaterial color="#f59e0b" roughness={0.6} metalness={0.8} />
           </mesh>
 
           {/* 1. CPU LGA SOCKET (Top Left) */}
@@ -92,7 +92,7 @@ export function ComputerCanvas3D({
             >
               <boxGeometry args={[0.7, 0.08, 0.7]} />
               <meshStandardMaterial
-                color={installedComponentIds.has("cpu") ? "#1e293b" : "#334155"}
+                color={installedComponentIds.has("cpu") ? "#334155" : "#64748b"}
                 metalness={0.8}
               />
             </mesh>
@@ -102,7 +102,7 @@ export function ComputerCanvas3D({
               <group position={[0, 0.15, 0]}>
                 <mesh>
                   <boxGeometry args={[0.65, 0.15, 0.65]} />
-                  <meshStandardMaterial color="#e2e8f0" metalness={0.9} roughness={0.1} />
+                  <meshStandardMaterial color="#f8fafc" metalness={0.9} roughness={0.1} />
                 </mesh>
                 {/* Cooler Heatsink Fins */}
                 <mesh position={[0, 0.2, 0]}>
@@ -115,10 +115,10 @@ export function ComputerCanvas3D({
 
             <Html position={[0, 0.8, 0]} center distanceFactor={8}>
               <div
-                className={`px-3 py-1 rounded-lg text-xs font-mono whitespace-nowrap transition-all border ${
+                className={`px-3 py-1 rounded-lg text-xs font-mono whitespace-nowrap transition-all border shadow-md ${
                   installedComponentIds.has("cpu")
-                    ? "bg-emerald-950/90 text-emerald-300 border-emerald-800"
-                    : "bg-slate-900/90 text-slate-300 border-slate-800"
+                    ? "bg-emerald-700 text-white font-bold border-emerald-600"
+                    : "bg-white/95 text-slate-800 border-slate-300"
                 }`}
               >
                 <span>LGA Socket: </span>
